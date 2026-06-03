@@ -5,14 +5,13 @@ import commonjs from '@rollup/plugin-commonjs';
 export default {
   input: 'src/main.ts',
   output: {
-    dir: '.',
-    entryFileNames: 'main.js',
+    file: 'main.js',
     format: 'cjs',
     sourcemap: 'inline'
   },
   external: ['obsidian'],
   plugins: [
-    typescript(),
+    typescript({ compilerOptions: { outDir: undefined } }),
     nodeResolve({ browser: true }),
     commonjs()
   ]
