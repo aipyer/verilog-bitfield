@@ -1,0 +1,10 @@
+{
+  "id": "verilog-bitfield",
+  "name": "Verilog Bitfield",
+  "version": "1.0.0",
+  "minAppVersion": "1.0.0",
+  "description": "Render Verilog bitfield definitions as interactive SVG diagrams and tables",
+  "author": "aipyer",
+  "authorUrl": "https://github.com/aipyer",
+  "isDesktopOnly": false
+}

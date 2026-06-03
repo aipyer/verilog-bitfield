@@ -1,0 +1,33 @@
+{
+  "name": "verilog-bitfield",
+  "version": "1.0.0",
+  "description": "Obsidian plugin for rendering Verilog bitfield diagrams",
+  "main": "main.js",
+  "scripts": {
+    "dev": "rollup -c rollup.config.mjs -w",
+    "build": "rollup -c rollup.config.mjs",
+    "test": "jest"
+  },
+  "keywords": [
+    "obsidian",
+    "verilog",
+    "bitfield",
+    "register"
+  ],
+  "author": "aipyer",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/aipyer/verilog-bitfield.git"
+  },
+  "devDependencies": {
+    "@rollup/plugin-commonjs": "^28.0.0",
+    "@rollup/plugin-node-resolve": "^16.0.0",
+    "@rollup/plugin-typescript": "^12.0.0",
+    "@types/node": "^20.0.0",
+    "obsidian": "latest",
+    "rollup": "^4.0.0",
+    "tslib": "^2.0.0",
+    "typescript": "^5.0.0"
+  }
+}

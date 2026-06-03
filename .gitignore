@@ -1,0 +1,6 @@
+node_modules/
+*.bak
+src.bak/
+main.js.bak
+styles.css.bak
+.DS_Store
