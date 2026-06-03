@@ -5,7 +5,8 @@ import commonjs from '@rollup/plugin-commonjs';
 export default {
   input: 'src/main.ts',
   output: {
-    file: 'main.js',
+    dir: '.',
+    entryFileNames: 'main.js',
     format: 'cjs',
     sourcemap: 'inline'
   },

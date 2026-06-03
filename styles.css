@@ -172,8 +172,8 @@
   border-radius: 8px;
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
   padding: 12px 16px;
-  max-width: 480px;
-  max-height: 400px;
+  max-width: 960px;
+  max-height: 800px;
   overflow: auto;
   font-size: 13px;
   pointer-events: auto;
@@ -204,7 +204,7 @@
 .bf-tooltip-table table {
   width: 100%;
   border-collapse: collapse;
-  font-size: 12px;
+  font-size: 14px;
 }
 
 .bf-tooltip-table th,
