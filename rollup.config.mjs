@@ -11,7 +11,7 @@ export default {
   },
   external: ['obsidian'],
   plugins: [
-    esbuild(),
+    esbuild({ target: 'es2020' }),
     nodeResolve({ browser: true }),
     commonjs()
   ]
