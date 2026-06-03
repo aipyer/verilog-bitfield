@@ -50,7 +50,7 @@ export function renderBlockSvg(block: FieldBlock): string {
     totalWidth: block.width,
     isVertical: shouldUseVertical(block.children, block.width),
     boxHeight: 60,
-    fontSize: 14
+    fontSize: 22
   };
 
   if (config.isVertical) {
@@ -65,15 +65,12 @@ export function renderBlockSvg(block: FieldBlock): string {
  */
 function renderHorizontal(fields: BitField[], config: RenderConfig): string {
   const svgWidth = 1000;
-  const svgHeight = config.boxHeight + 60;
+  const svgHeight = config.boxHeight + 80;
   const startX = 60;
   const startY = 40;
   const availableWidth = svgWidth - 120;
 
   let svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${svgWidth} ${svgHeight}" width="100%">`;
-
-  svg += `<text x="${startX}" y="20" font-size="${config.fontSize}" text-anchor="start" fill="#666">MSB</text>`;
-  svg += `<text x="${svgWidth - 60}" y="20" font-size="${config.fontSize}" text-anchor="end" fill="#666">LSB</text>`;
 
   let currentX = startX;
   for (let i = 0; i < fields.length; i++) {
@@ -84,6 +81,20 @@ function renderHorizontal(fields: BitField[], config: RenderConfig): string {
     svg += renderFieldBox(field, currentX, startY, boxWidth, config.boxHeight, color, config.fontSize);
     currentX += boxWidth;
   }
+
+  // LSB → MSB 方向箭头
+  const arrowY = startY + config.boxHeight + 22;
+  const fs = config.fontSize * 0.85;
+  const fieldLeft = startX;
+  const fieldRight = startX + availableWidth;
+  // LSB 右对齐到字段框左边缘
+  svg += `<text x="${fieldLeft}" y="${arrowY + 5}" font-size="${fs}" text-anchor="end" fill="#999">LSB</text>`;
+  // 箭头比字段框窄一点，两端留空
+  const arrowPad = 10;
+  svg += `<line x1="${fieldLeft + arrowPad}" y1="${arrowY}" x2="${fieldRight - arrowPad - 8}" y2="${arrowY}" stroke="#999" stroke-width="1.5"/>`;
+  svg += `<polygon points="${fieldRight - arrowPad},${arrowY} ${fieldRight - arrowPad - 10},${arrowY - 5} ${fieldRight - arrowPad - 10},${arrowY + 5}" fill="#999"/>`;
+  // MSB 左对齐到字段框右边缘
+  svg += `<text x="${fieldRight}" y="${arrowY + 5}" font-size="${fs}" fill="#999">MSB</text>`;
 
   svg += '</svg>';
   return svg;
@@ -97,13 +108,10 @@ function renderVertical(fields: BitField[], config: RenderConfig): string {
   const rowHeight = config.boxHeight;
   const startX = 60;
   const startY = 40;
-  const boxWidth = svgWidth - 120;
-  const svgHeight = startY + fields.length * rowHeight + 40;
+  const boxWidth = svgWidth - 160;
+  const svgHeight = startY + fields.length * rowHeight + 50;
 
   let svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${svgWidth} ${svgHeight}" width="100%">`;
-
-  svg += `<text x="${startX}" y="20" font-size="${config.fontSize}" text-anchor="start" fill="#666">MSB</text>`;
-  svg += `<text x="${startX}" y="${svgHeight - 10}" font-size="${config.fontSize}" text-anchor="start" fill="#666">LSB</text>`;
 
   let currentY = startY;
   for (let i = 0; i < fields.length; i++) {
@@ -112,6 +120,15 @@ function renderVertical(fields: BitField[], config: RenderConfig): string {
     svg += renderFieldBox(field, startX, currentY, boxWidth, rowHeight, color, config.fontSize);
     currentY += rowHeight;
   }
+
+  // LSB → MSB 方向箭头（纵向：从上到下）
+  const arrowX = startX + boxWidth + 24;
+  const arrowTop = startY;
+  const arrowBottom = startY + fields.length * rowHeight;
+  svg += `<line x1="${arrowX}" y1="${arrowTop + 8}" x2="${arrowX}" y2="${arrowBottom - 8}" stroke="#999" stroke-width="1.5"/>`;
+  svg += `<polygon points="${arrowX},${arrowBottom} ${arrowX - 5},${arrowBottom - 10} ${arrowX + 5},${arrowBottom - 10}" fill="#999"/>`;
+  svg += `<text x="${arrowX}" y="${arrowTop - 4}" font-size="${config.fontSize * 0.85}" text-anchor="middle" fill="#999">LSB</text>`;
+  svg += `<text x="${arrowX}" y="${arrowBottom + 18}" font-size="${config.fontSize * 0.85}" text-anchor="middle" fill="#999">MSB</text>`;
 
   svg += '</svg>';
   return svg;
@@ -150,7 +167,7 @@ function renderFieldBox(
   }
 
   const textDecoration = isRef ? ' text-decoration="underline"' : '';
-  const fillColor = isRsv ? '#888' : '#fff';
+  const fillColor = isRsv ? '#888' : '#333';
   svg += `<text x="${textX}" y="${textY}" font-size="${fontSize}" text-anchor="middle" dominant-baseline="central" fill="${fillColor}" font-family="monospace"${textDecoration} data-field="${fieldName}"${isRef ? ` data-ref="${field.refName}"` : ''} style="cursor:${isRef ? 'pointer' : 'default'}">${displayText}</text>`;
 
   return svg;

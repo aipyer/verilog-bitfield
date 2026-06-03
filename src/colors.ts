@@ -1,25 +1,22 @@
 /**
- * 颜色方案
+ * 颜色方案（浅色调）
  */
 
-// 主色（顶层字段）
+// 主色（顶层字段）— 柔和浅色
 const MAIN_COLORS = [
-  '#4A90D9', // 蓝
-  '#5CB85C', // 绿
-  '#F0AD4E', // 橙
-  '#9B59B6', // 紫
-  '#1ABC9C', // 青
-  '#E74C3C', // 红
+  '#B3D4F0', // 浅蓝
+  '#B8E0B8', // 浅绿
+  '#F5D6A8', // 浅橙
+  '#D4B8E8', // 浅紫
+  '#A8E0D6', // 浅青
+  '#F0B8B8', // 浅红
 ];
 
 // 保留色
-const RESERVED_COLOR = '#E0E0E0';
+const RESERVED_COLOR = '#E8E8E8';
 
 /**
  * 获取字段颜色
- * @param index 字段索引
- * @param isReserved 是否为 reserved
- * @param depth 嵌套深度（0 = 顶层）
  */
 export function getFieldColor(index: number, isReserved: boolean, depth: number = 0): string {
   if (isReserved) {
@@ -33,24 +30,19 @@ export function getFieldColor(index: number, isReserved: boolean, depth: number 
   }
 
   // 子字段：基于父色调整亮度
-  return adjustBrightness(baseColor, depth * 15);
+  return adjustBrightness(baseColor, depth * 10);
 }
 
 /**
  * 调整颜色亮度
- * @param hex 十六进制颜色
- * @param percent 亮度调整百分比（正数变亮，负数变暗）
  */
 function adjustBrightness(hex: string, percent: number): string {
-  // 移除 # 前缀
   hex = hex.replace('#', '');
 
-  // 解析 RGB
   const r = parseInt(hex.substring(0, 2), 16);
   const g = parseInt(hex.substring(2, 4), 16);
   const b = parseInt(hex.substring(4, 6), 16);
 
-  // 调整亮度
   const adjust = (channel: number) => {
     const adjusted = Math.round(channel + (255 - channel) * (percent / 100));
     return Math.min(255, Math.max(0, adjusted));
@@ -60,7 +52,6 @@ function adjustBrightness(hex: string, percent: number): string {
   const newG = adjust(g);
   const newB = adjust(b);
 
-  // 转换回十六进制
   const toHex = (n: number) => n.toString(16).padStart(2, '0');
   return `#${toHex(newR)}${toHex(newG)}${toHex(newB)}`;
 }
