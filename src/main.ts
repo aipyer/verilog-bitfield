@@ -4,19 +4,23 @@ import { renderBlockSvg } from './svgRenderer';
 import { renderBlockTable } from './tableRenderer';
 import { RegistryEntry, FieldBlock } from './types';
 
+interface PluginData {
+  defaultView?: 'svg' | 'table';
+}
+
+const DEFAULT_DATA: PluginData = { defaultView: 'svg' };
+
 export default class VerilogBitfieldPlugin extends Plugin {
   private blockRegistry: Map<string, RegistryEntry> = new Map();
   private pendingRefs: { element: HTMLElement; targetName: string }[] = [];
   private currentNotePath: string = '';
   private activeTooltip: HTMLElement | null = null;
-
-  private getDefaultView(): 'svg' | 'table' {
-    return (localStorage.getItem('bf-default-view') as 'svg' | 'table') || 'svg';
-  }
-
-  private currentView: 'svg' | 'table' = this.getDefaultView();
+  private currentView: 'svg' | 'table' = 'svg';
+  private pluginData: PluginData = DEFAULT_DATA;
 
   async onload() {
+    this.pluginData = Object.assign({}, DEFAULT_DATA, await this.loadData());
+    this.currentView = this.pluginData.defaultView || 'svg';
     this.registerMarkdownCodeBlockProcessor('verilog-bitfield', this.processBitfield.bind(this));
   }
 
@@ -105,14 +109,15 @@ export default class VerilogBitfieldPlugin extends Plugin {
       });
     };
 
-    applyView(this.getDefaultView());
+    applyView(this.currentView);
 
     btn.onclick = (e: MouseEvent) => {
       const target = e.target as HTMLElement;
       const view = target.getAttribute('data-view') as 'svg' | 'table' | null;
       if (view) {
         applyView(view);
-        localStorage.setItem('bf-default-view', view);
+        this.pluginData.defaultView = view;
+        this.saveData(this.pluginData);
       }
     };
   }
