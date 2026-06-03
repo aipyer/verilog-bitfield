@@ -23,11 +23,10 @@
   "devDependencies": {
     "@rollup/plugin-commonjs": "^28.0.0",
     "@rollup/plugin-node-resolve": "^16.0.0",
-    "@rollup/plugin-typescript": "^12.0.0",
     "@types/node": "^20.0.0",
     "obsidian": "latest",
     "rollup": "^4.0.0",
-    "tslib": "^2.0.0",
+    "rollup-plugin-esbuild": "^6.0.0",
     "typescript": "^5.0.0"
   }
 }

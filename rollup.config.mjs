@@ -1,4 +1,4 @@
-import typescript from '@rollup/plugin-typescript';
+import esbuild from 'rollup-plugin-esbuild';
 import { nodeResolve } from '@rollup/plugin-node-resolve';
 import commonjs from '@rollup/plugin-commonjs';
 
@@ -11,7 +11,7 @@ export default {
   },
   external: ['obsidian'],
   plugins: [
-    typescript({ compilerOptions: { outDir: undefined } }),
+    esbuild(),
     nodeResolve({ browser: true }),
     commonjs()
   ]

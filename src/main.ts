@@ -15,12 +15,11 @@ export default class VerilogBitfieldPlugin extends Plugin {
   private pendingRefs: { element: HTMLElement; targetName: string }[] = [];
   private currentNotePath: string = '';
   private activeTooltip: HTMLElement | null = null;
-  private currentView: 'svg' | 'table' = 'svg';
+  private tooltipRemoveTimer: ReturnType<typeof setTimeout> | null = null;
   private pluginData: PluginData = DEFAULT_DATA;
 
   async onload() {
     this.pluginData = Object.assign({}, DEFAULT_DATA, await this.loadData());
-    this.currentView = this.pluginData.defaultView || 'svg';
     this.registerMarkdownCodeBlockProcessor('verilog-bitfield', this.processBitfield.bind(this));
   }
 
@@ -39,7 +38,6 @@ export default class VerilogBitfieldPlugin extends Plugin {
       return;
     }
 
-    // 每个块独立渲染
     for (const [name, block] of result.blocks!) {
       this.renderBlock(name, block, el);
     }
@@ -47,16 +45,12 @@ export default class VerilogBitfieldPlugin extends Plugin {
     setTimeout(() => this.resolvePendingRefs(), 50);
   }
 
-  /**
-   * 渲染单个块：标题 + 切换按钮 + SVG/表格
-   */
   private renderBlock(name: string, block: FieldBlock, parentEl: HTMLElement) {
     const container = parentEl.createEl('div', {
       cls: 'verilog-bitfield-container',
       attr: { id: `bf:${name}` }
     });
 
-    // 标题行
     const headerRow = container.createEl('div', { cls: 'verilog-bitfield-header-row' });
     const desc = block.description ? ` — ${block.description}` : '';
     headerRow.createEl('span', {
@@ -65,7 +59,6 @@ export default class VerilogBitfieldPlugin extends Plugin {
     });
     const toggleBtn = this.createToggleButton(headerRow);
 
-    // 内容区域
     const contentWrap = container.createEl('div', { cls: 'verilog-bitfield-content' });
     const svgContainer = contentWrap.createEl('div', { cls: 'verilog-bitfield-svg' });
     svgContainer.innerHTML = renderBlockSvg(block);
@@ -77,49 +70,43 @@ export default class VerilogBitfieldPlugin extends Plugin {
     this.setupTableNavigationHandlers(tableContainer);
     this.setupTableTooltipHandlers(tableContainer);
 
-    this.bindToggle(toggleBtn, svgContainer, tableContainer);
+    // 初始化视图：读取保存的偏好
+    const defaultView = this.pluginData.defaultView || 'svg';
+    this.applyView(defaultView, contentWrap, svgContainer, tableContainer, toggleBtn);
 
-    // 注册
+    // 绑定切换事件
+    toggleBtn.onclick = (e: MouseEvent) => {
+      const target = e.target as HTMLElement;
+      const view = target.getAttribute('data-view') as 'svg' | 'table' | null;
+      if (view) {
+        this.applyView(view, contentWrap, svgContainer, tableContainer, toggleBtn);
+        this.pluginData.defaultView = view;
+        this.saveData(this.pluginData);
+      }
+    };
+
     this.blockRegistry.set(name, {
       element: container,
       block,
       notePath: this.currentNotePath
     });
 
-    // 收集待解析引用
     this.collectPendingRefs(svgContainer);
     this.collectPendingRefs(tableContainer);
   }
 
-  private createToggleButton(parent: HTMLElement): HTMLElement {
-    const btn = parent.createEl('div', { cls: 'bf-view-toggle' });
-    btn.createEl('span', { text: '位域图', cls: 'bf-toggle-option bf-toggle-svg bf-toggle-active', attr: { 'data-view': 'svg' } });
-    btn.createEl('span', { text: '表格', cls: 'bf-toggle-option bf-toggle-table', attr: { 'data-view': 'table' } });
-    return btn;
+  private applyView(view: 'svg' | 'table', contentWrap: HTMLElement, svgEl: HTMLElement, tableEl: HTMLElement, btn: HTMLElement) {
+    contentWrap.setAttribute('data-view', view);
+    btn.querySelectorAll('.bf-toggle-option').forEach(opt => {
+      opt.classList.toggle('bf-toggle-active', opt.getAttribute('data-view') === view);
+    });
   }
 
-  private bindToggle(btn: HTMLElement, svgEl: HTMLElement, tableEl: HTMLElement) {
-    const applyView = (view: 'svg' | 'table') => {
-      this.currentView = view;
-      // inline style 覆盖 CSS 默认值，PDF 导出时会被保留
-      svgEl.style.display = view === 'svg' ? 'block' : 'none';
-      tableEl.style.display = view === 'table' ? 'block' : 'none';
-      btn.querySelectorAll('.bf-toggle-option').forEach(opt => {
-        opt.classList.toggle('bf-toggle-active', opt.getAttribute('data-view') === view);
-      });
-    };
-
-    applyView(this.currentView);
-
-    btn.onclick = (e: MouseEvent) => {
-      const target = e.target as HTMLElement;
-      const view = target.getAttribute('data-view') as 'svg' | 'table' | null;
-      if (view) {
-        applyView(view);
-        this.pluginData.defaultView = view;
-        this.saveData(this.pluginData);
-      }
-    };
+  private createToggleButton(parent: HTMLElement): HTMLElement {
+    const btn = parent.createEl('div', { cls: 'bf-view-toggle' });
+    btn.createEl('span', { text: '位域图', cls: 'bf-toggle-option bf-toggle-svg', attr: { 'data-view': 'svg' } });
+    btn.createEl('span', { text: '表格', cls: 'bf-toggle-option bf-toggle-table', attr: { 'data-view': 'table' } });
+    return btn;
   }
 
   private renderErrors(el: HTMLElement, errors: { line: number; message: string; suggestion?: string }[]) {
@@ -141,9 +128,7 @@ export default class VerilogBitfieldPlugin extends Plugin {
       const target = e.target as SVGElement;
       const refName = target.getAttribute('data-ref')
         || target.parentElement?.getAttribute('data-ref');
-      if (refName) {
-        this.scrollToBlock(refName);
-      }
+      if (refName) this.scrollToBlock(refName);
     };
   }
 
@@ -153,26 +138,17 @@ export default class VerilogBitfieldPlugin extends Plugin {
       if (target.classList.contains('bf-ref-link')) {
         e.preventDefault();
         const refName = target.getAttribute('data-target');
-        if (refName) {
-          this.scrollToBlock(refName);
-        }
+        if (refName) this.scrollToBlock(refName);
       }
     };
   }
 
   private scrollToBlock(blockName: string) {
     const entry = this.blockRegistry.get(blockName);
-    if (!entry) {
-      console.warn(`[verilog-bitfield] 未找到定义块: ${blockName}`);
-      return;
-    }
-
+    if (!entry) return;
     entry.element.scrollIntoView({ behavior: 'smooth', block: 'center' });
-
     entry.element.classList.add('bf-highlight');
-    setTimeout(() => {
-      entry.element.classList.remove('bf-highlight');
-    }, 1500);
+    setTimeout(() => entry.element.classList.remove('bf-highlight'), 1500);
   }
 
   // ─── 悬浮 tooltip ───
@@ -183,21 +159,20 @@ export default class VerilogBitfieldPlugin extends Plugin {
       const refName = target.getAttribute('data-ref')
         || target.parentElement?.getAttribute('data-ref');
       if (refName) {
-        this.showTooltip(refName, e.clientX, e.clientY);
+        // 鼠标回到源元素上，取消待删除定时器
+        if (this.tooltipRemoveTimer) {
+          clearTimeout(this.tooltipRemoveTimer);
+          this.tooltipRemoveTimer = null;
+        }
+        const view = this.getViewForBlock(refName);
+        this.showTooltip(refName, e.clientX, e.clientY, view);
       }
     });
-
     container.addEventListener('mouseout', (e: MouseEvent) => {
       const target = e.target as SVGElement;
       const refName = target.getAttribute('data-ref')
         || target.parentElement?.getAttribute('data-ref');
-      if (refName) {
-        setTimeout(() => {
-          if (this.activeTooltip && !this.activeTooltip.matches(':hover')) {
-            this.removeTooltip();
-          }
-        }, 200);
-      }
+      if (refName) this.scheduleTooltipRemove();
     });
   }
 
@@ -205,26 +180,41 @@ export default class VerilogBitfieldPlugin extends Plugin {
     container.addEventListener('mouseover', (e: MouseEvent) => {
       const target = e.target as HTMLElement;
       if (target.classList.contains('bf-ref-link')) {
+        if (this.tooltipRemoveTimer) {
+          clearTimeout(this.tooltipRemoveTimer);
+          this.tooltipRemoveTimer = null;
+        }
         const refName = target.getAttribute('data-target');
         if (refName) {
-          this.showTooltip(refName, e.clientX, e.clientY);
+          const view = this.getViewForBlock(refName);
+          this.showTooltip(refName, e.clientX, e.clientY, view);
         }
       }
     });
-
     container.addEventListener('mouseout', (e: MouseEvent) => {
       const target = e.target as HTMLElement;
-      if (target.classList.contains('bf-ref-link')) {
-        setTimeout(() => {
-          if (this.activeTooltip && !this.activeTooltip.matches(':hover')) {
-            this.removeTooltip();
-          }
-        }, 200);
-      }
+      if (target.classList.contains('bf-ref-link')) this.scheduleTooltipRemove();
     });
   }
 
-  private showTooltip(blockName: string, mouseX: number, mouseY: number) {
+  /** 获取被引用块自身的视图状态，不存在则用默认偏好 */
+  private getViewForBlock(blockName: string): 'svg' | 'table' {
+    const entry = this.blockRegistry.get(blockName);
+    if (entry) {
+      const contentWrap = entry.element.querySelector('.verilog-bitfield-content');
+      const view = contentWrap?.getAttribute('data-view') as 'svg' | 'table' | undefined;
+      if (view) return view;
+    }
+    return this.pluginData.defaultView || 'svg';
+  }
+
+  private scheduleTooltipRemove() {
+    this.tooltipRemoveTimer = setTimeout(() => {
+      this.removeTooltip();
+    }, 200);
+  }
+
+  private showTooltip(blockName: string, mouseX: number, mouseY: number, view: 'svg' | 'table') {
     const entry = this.blockRegistry.get(blockName);
     if (!entry) return;
 
@@ -234,12 +224,9 @@ export default class VerilogBitfieldPlugin extends Plugin {
     tooltip.className = 'bf-tooltip';
 
     const desc = entry.block.description ? ` — ${entry.block.description}` : '';
-    tooltip.createEl('p', {
-      text: `${blockName}${desc}`,
-      cls: 'bf-tooltip-header'
-    });
+    tooltip.createEl('p', { text: `${blockName}${desc}`, cls: 'bf-tooltip-header' });
 
-    if (this.currentView === 'svg') {
+    if (view === 'svg') {
       const svgWrap = tooltip.createEl('div', { cls: 'bf-tooltip-svg' });
       svgWrap.innerHTML = renderBlockSvg(entry.block);
     } else {
@@ -247,10 +234,7 @@ export default class VerilogBitfieldPlugin extends Plugin {
       tableWrap.innerHTML = renderBlockTable(entry.block);
     }
 
-    tooltip.createEl('p', {
-      text: '单击跳转查看完整定义',
-      cls: 'bf-tooltip-hint'
-    });
+    tooltip.createEl('p', { text: '单击跳转查看完整定义', cls: 'bf-tooltip-hint' });
 
     document.body.appendChild(tooltip);
     this.activeTooltip = tooltip;
@@ -258,21 +242,20 @@ export default class VerilogBitfieldPlugin extends Plugin {
     const rect = tooltip.getBoundingClientRect();
     let left = mouseX + 12;
     let top = mouseY - 20;
-
-    if (left + rect.width > window.innerWidth - 16) {
-      left = mouseX - rect.width - 12;
-    }
-    if (top + rect.height > window.innerHeight - 16) {
-      top = window.innerHeight - rect.height - 16;
-    }
+    if (left + rect.width > window.innerWidth - 16) left = mouseX - rect.width - 12;
+    if (top + rect.height > window.innerHeight - 16) top = window.innerHeight - rect.height - 16;
     if (top < 8) top = 8;
 
     tooltip.style.left = `${left}px`;
     tooltip.style.top = `${top}px`;
-
-    tooltip.addEventListener('mouseleave', () => {
-      this.removeTooltip();
+    // 鼠标进入 tooltip 时取消待删除定时器
+    tooltip.addEventListener('mouseenter', () => {
+      if (this.tooltipRemoveTimer) {
+        clearTimeout(this.tooltipRemoveTimer);
+        this.tooltipRemoveTimer = null;
+      }
     });
+    tooltip.addEventListener('mouseleave', () => this.removeTooltip());
   }
 
   private removeTooltip() {
@@ -291,7 +274,6 @@ export default class VerilogBitfieldPlugin extends Plugin {
         this.pendingRefs.push({ element: el as HTMLElement, targetName: refName });
       }
     });
-
     container.querySelectorAll('.bf-ref-link').forEach((el) => {
       const targetName = el.getAttribute('data-target')!;
       if (!this.blockRegistry.has(targetName)) {
@@ -303,7 +285,6 @@ export default class VerilogBitfieldPlugin extends Plugin {
 
   private resolvePendingRefs() {
     const stillPending: typeof this.pendingRefs = [];
-
     for (const pending of this.pendingRefs) {
       if (this.blockRegistry.has(pending.targetName)) {
         pending.element.classList.remove('bf-ref-unresolved');
@@ -311,7 +292,6 @@ export default class VerilogBitfieldPlugin extends Plugin {
         stillPending.push(pending);
       }
     }
-
     this.pendingRefs = stillPending;
   }
 }

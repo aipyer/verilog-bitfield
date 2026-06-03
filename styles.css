@@ -48,6 +48,12 @@
   color: #fff;
 }
 
+/* 视图切换 */
+.verilog-bitfield-content[data-view="svg"] .verilog-bitfield-svg { display: block; }
+.verilog-bitfield-content[data-view="svg"] .verilog-bitfield-table-container { display: none; }
+.verilog-bitfield-content[data-view="table"] .verilog-bitfield-svg { display: none; }
+.verilog-bitfield-content[data-view="table"] .verilog-bitfield-table-container { display: block; }
+
 /* SVG 位域图 */
 .verilog-bitfield-svg {
   overflow-x: auto;
