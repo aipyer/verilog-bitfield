@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 180" width="100%">
+  <!-- mode[3:0] - 4 bits - #B3D4F0 -->
+  <text x="170" y="62" font-size="15.4" text-anchor="middle" fill="#999" font-family="monospace">[3:0]</text>
+  <rect x="60" y="70" width="220" height="60" fill="#B3D4F0" stroke="#fff" stroke-width="2" rx="4" ry="4"/>
+  <text x="170" y="107.7" font-size="22" text-anchor="middle" dominant-baseline="central" fill="#333" font-family="monospace">mode[3:0]</text>
+
+  <!-- error_code[3:0] - 4 bits - #B8E0B8 -->
+  <text x="390" y="62" font-size="15.4" text-anchor="middle" fill="#999" font-family="monospace">[7:4]</text>
+  <rect x="280" y="70" width="220" height="60" fill="#B8E0B8" stroke="#fff" stroke-width="2" rx="4" ry="4"/>
+  <text x="390" y="107.7" font-size="22" text-anchor="middle" dominant-baseline="central" fill="#333" font-family="monospace">error_code[3:0]</text>
+
+  <!-- data[7:0] - 8 bits - #F5D6A8 -->
+  <text x="720" y="62" font-size="15.4" text-anchor="middle" fill="#999" font-family="monospace">[15:8]</text>
+  <rect x="500" y="70" width="440" height="60" fill="#F5D6A8" stroke="#fff" stroke-width="2" rx="4" ry="4"/>
+  <text x="720" y="107.7" font-size="22" text-anchor="middle" dominant-baseline="central" fill="#333" font-family="monospace">data[7:0]</text>
+
+  <!-- LSB/MSB arrow -->
+  <text x="60" y="157" font-size="18.7" text-anchor="end" fill="#999">LSB</text>
+  <line x1="70" y1="152" x2="922" y2="152" stroke="#999" stroke-width="1.5"/>
+  <polygon points="930,152 920,147 920,157" fill="#999"/>
+  <text x="940" y="157" font-size="18.7" fill="#999">MSB</text>
+</svg>

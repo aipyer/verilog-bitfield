@@ -1,11 +1,11 @@
 # Verilog Bitfield
 
-An Obsidian plugin that renders Verilog bitfield definitions as interactive SVG diagrams and tables. Designed for chip frontend engineers to visualize register layouts directly in their notes.
+An Obsidian plugin that renders Verilog bitfield definitions as interactive SVG diagrams and tables. Designed for chip frontend engineers to visualize bitfield layouts directly in their notes.
 
 ## Features
 
-- **Unified syntax** — define registers with `name width description` and indented children
-- **SVG bitfield diagram** — auto layout (horizontal/vertical) based on field label fit
+- **Unified syntax** — define bitfields with `name width description` and indented children
+- **SVG bitfield diagram** — auto layout (horizontal/vertical) with dual-index labels: self-relative inside box, parent bit range outside as gray annotation
 - **HTML table view** — toggle between diagram and table with one click
 - **Cross-block references** — use `@block_name` to reference definitions across code blocks
 - **Click to navigate** — click a `@reference` to scroll to the definition and highlight it
@@ -29,6 +29,18 @@ uart_ctrl 32 UART Control Register
     parity_en 1 Parity enable
 ```
 ````
+
+The plugin renders it as an interactive bitfield diagram with dual-index labels:
+
+![Vertical bitfield diagram](images/vertical.svg)
+
+Switch to table view with one click. Wider fields with shorter labels render horizontally:
+
+![Horizontal bitfield diagram](images/horizontal.svg)
+
+The table view shows field name, bit width, bit range, and description with nested indentation:
+
+![Table view](images/table.svg)
 
 ### Cross-block references
 
@@ -56,7 +68,7 @@ uart_regs 64 UART Register Block
 ```
 ````
 
-Click `@uart_ctrl` in the register block to jump to its definition.
+Click `@uart_ctrl` in the referencing block to jump to its definition.
 
 ## Installation
 

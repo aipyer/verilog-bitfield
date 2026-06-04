@@ -1,0 +1,76 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 700 250" width="100%">
+  <style>
+    .header { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; font-size: 14px; font-weight: 600; fill: #333; }
+    .cell { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; font-size: 13px; fill: #333; }
+    .cell-gray { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; font-size: 13px; fill: #888; font-style: italic; }
+    .cell-mono { font-family: "Cascadia Code", "Fira Code", Consolas, monospace; font-size: 13px; fill: #333; }
+    .cell-mono-gray { font-family: "Cascadia Code", "Fira Code", Consolas, monospace; font-size: 13px; fill: #888; font-style: italic; }
+  </style>
+
+  <!-- 表头背景 -->
+  <rect x="20" y="10" width="660" height="28" fill="#f5f5f5"/>
+  <text x="110" y="30" text-anchor="middle" class="header">Field</text>
+  <text x="260" y="30" text-anchor="middle" class="header">Width</text>
+  <text x="370" y="30" text-anchor="middle" class="header">Bit Range</text>
+  <text x="530" y="30" text-anchor="middle" class="header">Description</text>
+
+  <!-- 行 1: tx_en -->
+  <text x="110" y="58" text-anchor="middle" class="cell-mono">tx_en</text>
+  <text x="260" y="58" text-anchor="middle" class="cell">1</text>
+  <text x="370" y="58" text-anchor="middle" class="cell-mono">[0:0]</text>
+  <text x="440" y="58" class="cell">Transmit enable</text>
+
+  <!-- 行 2: rx_en -->
+  <text x="110" y="86" text-anchor="middle" class="cell-mono">rx_en</text>
+  <text x="260" y="86" text-anchor="middle" class="cell">1</text>
+  <text x="370" y="86" text-anchor="middle" class="cell-mono">[1:1]</text>
+  <text x="440" y="86" class="cell">Receive enable</text>
+
+  <!-- 行 3: reserved -->
+  <rect x="20" y="94" width="660" height="28" fill="#f9f9f9"/>
+  <text x="110" y="114" text-anchor="middle" class="cell-mono-gray">reserved</text>
+  <text x="260" y="114" text-anchor="middle" class="cell-gray">2</text>
+  <text x="370" y="114" text-anchor="middle" class="cell-mono-gray">[3:2]</text>
+
+  <!-- 行 4: data_bits -->
+  <text x="110" y="142" text-anchor="middle" class="cell-mono">data_bits</text>
+  <text x="260" y="142" text-anchor="middle" class="cell">2</text>
+  <text x="370" y="142" text-anchor="middle" class="cell-mono">[5:4]</text>
+  <text x="440" y="142" class="cell">Data bits select</text>
+
+  <!-- 行 5: stop_bits -->
+  <text x="110" y="170" text-anchor="middle" class="cell-mono">stop_bits</text>
+  <text x="260" y="170" text-anchor="middle" class="cell">1</text>
+  <text x="370" y="170" text-anchor="middle" class="cell-mono">[6:6]</text>
+  <text x="440" y="170" class="cell">Stop bits select</text>
+
+  <!-- 行 6: parity_en -->
+  <text x="110" y="198" text-anchor="middle" class="cell-mono">parity_en</text>
+  <text x="260" y="198" text-anchor="middle" class="cell">1</text>
+  <text x="370" y="198" text-anchor="middle" class="cell-mono">[7:7]</text>
+  <text x="440" y="198" class="cell">Parity enable</text>
+
+  <!-- 行 7: reserved (自动填充) -->
+  <rect x="20" y="206" width="660" height="28" fill="#f9f9f9"/>
+  <text x="110" y="226" text-anchor="middle" class="cell-mono-gray">reserved</text>
+  <text x="260" y="226" text-anchor="middle" class="cell-gray">24</text>
+  <text x="370" y="226" text-anchor="middle" class="cell-mono-gray">[31:8]</text>
+
+  <!-- 网格线：竖线 -->
+  <line x1="200" y1="10" x2="200" y2="234" stroke="#ddd" stroke-width="1"/>
+  <line x1="310" y1="10" x2="310" y2="234" stroke="#ddd" stroke-width="1"/>
+  <line x1="420" y1="10" x2="420" y2="234" stroke="#ddd" stroke-width="1"/>
+
+  <!-- 网格线：横线 -->
+  <line x1="20" y1="38" x2="680" y2="38" stroke="#ddd" stroke-width="1"/>
+  <line x1="20" y1="66" x2="680" y2="66" stroke="#ddd" stroke-width="1"/>
+  <line x1="20" y1="94" x2="680" y2="94" stroke="#ddd" stroke-width="1"/>
+  <line x1="20" y1="122" x2="680" y2="122" stroke="#ddd" stroke-width="1"/>
+  <line x1="20" y1="150" x2="680" y2="150" stroke="#ddd" stroke-width="1"/>
+  <line x1="20" y1="178" x2="680" y2="178" stroke="#ddd" stroke-width="1"/>
+  <line x1="20" y1="206" x2="680" y2="206" stroke="#ddd" stroke-width="1"/>
+  <line x1="20" y1="234" x2="680" y2="234" stroke="#ddd" stroke-width="1"/>
+
+  <!-- 外边框 -->
+  <rect x="20" y="10" width="660" height="224" fill="none" stroke="#ddd" stroke-width="1"/>
+</svg>

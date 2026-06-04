@@ -78,7 +78,7 @@ function renderHorizontal(fields: BitField[], config: RenderConfig): string {
     const widthRatio = field.width / config.totalWidth;
     const boxWidth = widthRatio * availableWidth;
     const color = getFieldColor(i, field.isReserved, 0);
-    svg += renderFieldBox(field, currentX, startY, boxWidth, config.boxHeight, color, config.fontSize);
+    svg += renderFieldBox(field, currentX, startY, boxWidth, config.boxHeight, color, config.fontSize, 'horizontal');
     currentX += boxWidth;
   }
 
@@ -136,6 +136,7 @@ function renderVertical(fields: BitField[], config: RenderConfig): string {
 
 /**
  * 渲染字段框
+ * @param layoutDirection 布局方向，用于决定父字段索引标注位置
  */
 function renderFieldBox(
   field: BitField,
@@ -144,7 +145,8 @@ function renderFieldBox(
   width: number,
   height: number,
   color: string,
-  fontSize: number
+  fontSize: number,
+  layoutDirection: 'horizontal' | 'vertical' = 'vertical'
 ): string {
   let svg = '';
   const isRef = field.isReference;
@@ -155,20 +157,40 @@ function renderFieldBox(
   const strokeColor = isRef ? '#4A90D9' : '#fff';
   svg += `<rect x="${x}" y="${y}" width="${width}" height="${height}" fill="${color}" stroke="${strokeColor}" stroke-width="2" rx="4" ry="4" data-field="${fieldName}"${isRef ? ` data-ref="${field.refName}"` : ''} style="cursor:${isRef ? 'pointer' : 'default'}"/>`;
 
-  const label = `${fieldName}[${field.msb}:${field.lsb}]`;
+  // 框内：字段自身索引 [width-1:0]，单 bit 字段省略索引
+  const selfHigh = field.width - 1;
+  const selfLabel = selfHigh === 0 ? fieldName : `${fieldName}[${selfHigh}:0]`;
   const textX = x + width / 2;
   const textY = y + height / 2 + fontSize * 0.35;
   const textWidth = width - 16;
   const maxChars = Math.floor(textWidth / (fontSize * 0.6));
 
-  let displayText = label;
-  if (label.length > maxChars && maxChars > 3) {
-    displayText = label.substring(0, maxChars - 2) + '..';
+  let displayText = selfLabel;
+  if (selfLabel.length > maxChars && maxChars > 3) {
+    displayText = selfLabel.substring(0, maxChars - 2) + '..';
   }
 
   const textDecoration = isRef ? ' text-decoration="underline"' : '';
   const fillColor = isRsv ? '#888' : '#333';
   svg += `<text x="${textX}" y="${textY}" font-size="${fontSize}" text-anchor="middle" dominant-baseline="central" fill="${fillColor}" font-family="monospace"${textDecoration} data-field="${fieldName}"${isRef ? ` data-ref="${field.refName}"` : ''} style="cursor:${isRef ? 'pointer' : 'default'}">${displayText}</text>`;
+
+  // 框外：父字段索引 [msb:lsb]，灰色小字
+  const parentHigh = field.msb;
+  const parentLow = field.lsb;
+  const parentLabel = parentHigh === parentLow ? `[${parentHigh}]` : `[${parentHigh}:${parentLow}]`;
+  const annotationFontSize = fontSize * 0.7;
+
+  if (layoutDirection === 'vertical') {
+    // 纵向：标注在左侧，右对齐
+    const annotX = x - 8;
+    const annotY = textY;
+    svg += `<text x="${annotX}" y="${annotY}" font-size="${annotationFontSize}" text-anchor="end" dominant-baseline="central" fill="#999" font-family="monospace">${parentLabel}</text>`;
+  } else {
+    // 横向：标注在上方，居中
+    const annotX = textX;
+    const annotY = y - 8;
+    svg += `<text x="${annotX}" y="${annotY}" font-size="${annotationFontSize}" text-anchor="middle" fill="#999" font-family="monospace">${parentLabel}</text>`;
+  }
 
   return svg;
 }

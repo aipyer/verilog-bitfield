@@ -1,0 +1,42 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1100 510" width="100%">
+  <!-- tx_en - 1 bit - #B3D4F0 -->
+  <text x="152" y="77.7" font-size="15.4" text-anchor="end" fill="#999" font-family="monospace">[0:0]</text>
+  <rect x="160" y="40" width="740" height="60" fill="#B3D4F0" stroke="#fff" stroke-width="2" rx="4" ry="4"/>
+  <text x="530" y="77.7" font-size="22" text-anchor="middle" dominant-baseline="central" fill="#333" font-family="monospace">tx_en</text>
+
+  <!-- rx_en - 1 bit - #B8E0B8 -->
+  <text x="152" y="137.7" font-size="15.4" text-anchor="end" fill="#999" font-family="monospace">[1:1]</text>
+  <rect x="160" y="100" width="740" height="60" fill="#B8E0B8" stroke="#fff" stroke-width="2" rx="4" ry="4"/>
+  <text x="530" y="137.7" font-size="22" text-anchor="middle" dominant-baseline="central" fill="#333" font-family="monospace">rx_en</text>
+
+  <!-- reserved[1:0] - 2 bits - #E8E8E8 -->
+  <text x="152" y="197.7" font-size="15.4" text-anchor="end" fill="#999" font-family="monospace">[3:2]</text>
+  <rect x="160" y="160" width="740" height="60" fill="#E8E8E8" stroke="#fff" stroke-width="2" rx="4" ry="4"/>
+  <text x="530" y="197.7" font-size="22" text-anchor="middle" dominant-baseline="central" fill="#888" font-family="monospace">reserved[1:0]</text>
+
+  <!-- data_bits[1:0] - 2 bits - #D4B8E8 -->
+  <text x="152" y="257.7" font-size="15.4" text-anchor="end" fill="#999" font-family="monospace">[5:4]</text>
+  <rect x="160" y="220" width="740" height="60" fill="#D4B8E8" stroke="#fff" stroke-width="2" rx="4" ry="4"/>
+  <text x="530" y="257.7" font-size="22" text-anchor="middle" dominant-baseline="central" fill="#333" font-family="monospace">data_bits[1:0]</text>
+
+  <!-- stop_bits - 1 bit - #A8E0D6 -->
+  <text x="152" y="317.7" font-size="15.4" text-anchor="end" fill="#999" font-family="monospace">[6:6]</text>
+  <rect x="160" y="280" width="740" height="60" fill="#A8E0D6" stroke="#fff" stroke-width="2" rx="4" ry="4"/>
+  <text x="530" y="317.7" font-size="22" text-anchor="middle" dominant-baseline="central" fill="#333" font-family="monospace">stop_bits</text>
+
+  <!-- parity_en - 1 bit - #F0B8B8 -->
+  <text x="152" y="377.7" font-size="15.4" text-anchor="end" fill="#999" font-family="monospace">[7:7]</text>
+  <rect x="160" y="340" width="740" height="60" fill="#F0B8B8" stroke="#fff" stroke-width="2" rx="4" ry="4"/>
+  <text x="530" y="377.7" font-size="22" text-anchor="middle" dominant-baseline="central" fill="#333" font-family="monospace">parity_en</text>
+
+  <!-- reserved[23:0] - 24 bits - #E8E8E8 -->
+  <text x="152" y="437.7" font-size="15.4" text-anchor="end" fill="#999" font-family="monospace">[31:8]</text>
+  <rect x="160" y="400" width="740" height="60" fill="#E8E8E8" stroke="#fff" stroke-width="2" rx="4" ry="4"/>
+  <text x="530" y="437.7" font-size="22" text-anchor="middle" dominant-baseline="central" fill="#888" font-family="monospace">reserved[23:0]</text>
+
+  <!-- LSB/MSB arrow -->
+  <line x1="924" y1="48" x2="924" y2="452" stroke="#999" stroke-width="1.5"/>
+  <polygon points="924,460 919,450 929,450" fill="#999"/>
+  <text x="924" y="36" font-size="18.7" text-anchor="middle" fill="#999">LSB</text>
+  <text x="924" y="478" font-size="18.7" text-anchor="middle" fill="#999">MSB</text>
+</svg>

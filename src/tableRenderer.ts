@@ -12,10 +12,10 @@ export function renderBlockTable(block: FieldBlock): string {
 
   let html = '<table class="verilog-bitfield-table">';
   html += '<thead><tr>';
-  html += '<th>字段名</th>';
-  html += '<th>位宽</th>';
-  html += '<th>Bit 范围</th>';
-  html += '<th>描述</th>';
+  html += '<th>Field</th>';
+  html += '<th>Width</th>';
+  html += '<th>Bit Range</th>';
+  html += '<th>Description</th>';
   html += '</tr></thead>';
   html += '<tbody>';
   html += rows.join('');

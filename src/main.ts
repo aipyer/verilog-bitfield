@@ -54,7 +54,7 @@ export default class VerilogBitfieldPlugin extends Plugin {
     const headerRow = container.createEl('div', { cls: 'verilog-bitfield-header-row' });
     const desc = block.description ? ` — ${block.description}` : '';
     headerRow.createEl('span', {
-      text: `${name}${desc} 的字段定义如下：`,
+      text: `${name}${desc} 的 ${block.width} bit 定义如下：`,
       cls: 'verilog-bitfield-header'
     });
     const toggleBtn = this.createToggleButton(headerRow);
