@@ -7,6 +7,8 @@ An Obsidian plugin that renders Verilog bitfield definitions as interactive SVG 
 - **Unified syntax** — define bitfields with `name width description` and indented children
 - **SVG bitfield diagram** — auto layout (horizontal/vertical) with dual-index labels: self-relative inside box, parent bit range outside as gray annotation
 - **HTML table view** — toggle between diagram and table with one click
+- **Configurable themes** — 3 SVG color schemes (pastel/vivid/mono) and 5 table styles (default/minimal/zebra/clean/dark-header)
+- **Adjustable row height** — SVG and table row height independently configurable via slider
 - **Cross-block references** — use `@block_name` to reference definitions across code blocks
 - **Click to navigate** — click a `@reference` to scroll to the definition and highlight it
 - **Hover preview** — hover over a `@reference` to see a tooltip preview of the definition

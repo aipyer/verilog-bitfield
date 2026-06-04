@@ -1,5 +1,5 @@
 import { BitField, FieldBlock } from './types';
-import { getFieldColor } from './colors';
+import { getFieldColor, SvgTheme } from './colors';
 
 /**
  * SVG 渲染配置
@@ -13,6 +13,8 @@ interface RenderConfig {
   boxHeight: number;
   /** 字体大小 */
   fontSize: number;
+  /** SVG 主题 */
+  theme: SvgTheme;
 }
 
 /**
@@ -45,12 +47,13 @@ function shouldUseVertical(fields: BitField[], totalWidth: number): boolean {
 /**
  * 渲染块的 SVG 位域图
  */
-export function renderBlockSvg(block: FieldBlock): string {
+export function renderBlockSvg(block: FieldBlock, theme: SvgTheme = 'pastel', boxHeight: number = 44): string {
   const config: RenderConfig = {
     totalWidth: block.width,
     isVertical: shouldUseVertical(block.children, block.width),
-    boxHeight: 60,
-    fontSize: 22
+    boxHeight,
+    fontSize: 22,
+    theme,
   };
 
   if (config.isVertical) {
@@ -65,9 +68,9 @@ export function renderBlockSvg(block: FieldBlock): string {
  */
 function renderHorizontal(fields: BitField[], config: RenderConfig): string {
   const svgWidth = 1000;
-  const svgHeight = config.boxHeight + 80;
+  const svgHeight = config.boxHeight + 50;
   const startX = 60;
-  const startY = 40;
+  const startY = 15;
   const availableWidth = svgWidth - 120;
 
   let svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${svgWidth} ${svgHeight}" width="100%">`;
@@ -77,7 +80,7 @@ function renderHorizontal(fields: BitField[], config: RenderConfig): string {
     const field = fields[i];
     const widthRatio = field.width / config.totalWidth;
     const boxWidth = widthRatio * availableWidth;
-    const color = getFieldColor(i, field.isReserved, 0);
+    const color = getFieldColor(i, field.isReserved, 0, config.theme);
     svg += renderFieldBox(field, currentX, startY, boxWidth, config.boxHeight, color, config.fontSize, 'horizontal');
     currentX += boxWidth;
   }
@@ -107,16 +110,16 @@ function renderVertical(fields: BitField[], config: RenderConfig): string {
   const svgWidth = 1000;
   const rowHeight = config.boxHeight;
   const startX = 60;
-  const startY = 40;
+  const startY = 22;
   const boxWidth = svgWidth - 160;
-  const svgHeight = startY + fields.length * rowHeight + 50;
+  const svgHeight = startY + fields.length * rowHeight + 25;
 
   let svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${svgWidth} ${svgHeight}" width="100%">`;
 
   let currentY = startY;
   for (let i = 0; i < fields.length; i++) {
     const field = fields[i];
-    const color = getFieldColor(i, field.isReserved, 0);
+    const color = getFieldColor(i, field.isReserved, 0, config.theme);
     svg += renderFieldBox(field, startX, currentY, boxWidth, rowHeight, color, config.fontSize);
     currentY += rowHeight;
   }
@@ -161,7 +164,7 @@ function renderFieldBox(
   const selfHigh = field.width - 1;
   const selfLabel = selfHigh === 0 ? fieldName : `${fieldName}[${selfHigh}:0]`;
   const textX = x + width / 2;
-  const textY = y + height / 2 + fontSize * 0.35;
+  const textY = y + height / 2;
   const textWidth = width - 16;
   const maxChars = Math.floor(textWidth / (fontSize * 0.6));
 
@@ -170,7 +173,7 @@ function renderFieldBox(
     displayText = selfLabel.substring(0, maxChars - 2) + '..';
   }
 
-  const textDecoration = isRef ? ' text-decoration="underline"' : '';
+  const textDecoration = '';
   const fillColor = isRsv ? '#888' : '#333';
   svg += `<text x="${textX}" y="${textY}" font-size="${fontSize}" text-anchor="middle" dominant-baseline="central" fill="${fillColor}" font-family="monospace"${textDecoration} data-field="${fieldName}"${isRef ? ` data-ref="${field.refName}"` : ''} style="cursor:${isRef ? 'pointer' : 'default'}">${displayText}</text>`;
 

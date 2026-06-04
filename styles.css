@@ -29,6 +29,13 @@
   flex-shrink: 0;
 }
 
+/* PDF 导出时隐藏切换按钮 */
+@media print {
+  .bf-view-toggle {
+    display: none !important;
+  }
+}
+
 .bf-toggle-option {
   padding: 4px 12px;
   cursor: pointer;
@@ -84,13 +91,17 @@
 .verilog-bitfield-table {
   width: 100%;
   border-collapse: collapse;
+  table-layout: auto;
 }
 
 .verilog-bitfield-table th,
 .verilog-bitfield-table td {
   border: 1px solid #ddd;
-  padding: 8px 12px;
+  padding: 0 8px;
   text-align: center;
+  line-height: var(--bf-table-row-height, 28px);
+  font-size: 0.9em;
+  height: var(--bf-table-row-height, 28px);
 }
 
 .verilog-bitfield-table th:last-child,
@@ -135,10 +146,118 @@
   background-color: #efefef;
 }
 
+/* ── minimal 主题：去竖线，只保留横线 ── */
+[data-theme="minimal"] .verilog-bitfield-table th,
+[data-theme="minimal"] .verilog-bitfield-table td {
+  border: none;
+  border-bottom: 1px solid #eee;
+}
+[data-theme="minimal"] .verilog-bitfield-table th {
+  border-bottom: 2px solid #ddd;
+}
+[data-theme="minimal"] .verilog-bitfield-table tr:last-child td {
+  border-bottom: none;
+}
+[data-theme="minimal"] .verilog-bitfield-table tr.ref-child {
+  background-color: transparent;
+}
+[data-theme="minimal"] .verilog-bitfield-table tr.ref-child:hover {
+  background-color: #f0f7ff;
+}
+[data-theme="minimal"] .verilog-bitfield-table tr.reserved-row {
+  background-color: transparent;
+}
+[data-theme="minimal"] .verilog-bitfield-table tr.reserved-row:hover {
+  background-color: #f9f9f9;
+}
+
+/* ── zebra 主题：奇偶行交替底色，无网格线 ── */
+[data-theme="zebra"] .verilog-bitfield-table th,
+[data-theme="zebra"] .verilog-bitfield-table td {
+  border: none;
+}
+[data-theme="zebra"] .verilog-bitfield-table th {
+  border-bottom: 2px solid #ddd;
+}
+[data-theme="zebra"] .verilog-bitfield-table tbody tr:nth-child(even) {
+  background-color: #f9f9f9;
+}
+[data-theme="zebra"] .verilog-bitfield-table tbody tr:nth-child(even):hover {
+  background-color: #f0f0f0;
+}
+[data-theme="zebra"] .verilog-bitfield-table tr.ref-child {
+  background-color: #f0f7ff;
+}
+[data-theme="zebra"] .verilog-bitfield-table tr.ref-child:hover {
+  background-color: #e0efff;
+}
+[data-theme="zebra"] .verilog-bitfield-table tr.reserved-row {
+  background-color: #f5f5f5;
+}
+[data-theme="zebra"] .verilog-bitfield-table tr.reserved-row:hover {
+  background-color: #efefef;
+}
+
+/* ── clean 主题：无边框，纯留白分隔 ── */
+[data-theme="clean"] .verilog-bitfield-table th,
+[data-theme="clean"] .verilog-bitfield-table td {
+  border: none;
+}
+[data-theme="clean"] .verilog-bitfield-table th {
+  border-bottom: 2px solid #333;
+  font-weight: 600;
+}
+[data-theme="clean"] .verilog-bitfield-table tr {
+  border-bottom: 1px solid #eee;
+}
+[data-theme="clean"] .verilog-bitfield-table tr.ref-child {
+  background-color: transparent;
+}
+[data-theme="clean"] .verilog-bitfield-table tr.ref-child:hover {
+  background-color: #f0f7ff;
+}
+[data-theme="clean"] .verilog-bitfield-table tr.reserved-row {
+  background-color: transparent;
+}
+[data-theme="clean"] .verilog-bitfield-table tr.reserved-row:hover {
+  background-color: #f9f9f9;
+}
+
+/* ── dark-header 主题：深色表头白字，表体无交替色 ── */
+[data-theme="dark-header"] .verilog-bitfield-table th,
+[data-theme="dark-header"] .verilog-bitfield-table td {
+  border: none;
+  border-bottom: 1px solid #eee;
+}
+[data-theme="dark-header"] .verilog-bitfield-table th {
+  background-color: #333;
+  color: #fff;
+  border-bottom: none;
+  font-weight: 600;
+}
+[data-theme="dark-header"] .verilog-bitfield-table tr:last-child td {
+  border-bottom: none;
+}
+[data-theme="dark-header"] .verilog-bitfield-table tr:hover {
+  background-color: #f0f0f0;
+}
+[data-theme="dark-header"] .verilog-bitfield-table tr.ref-child {
+  background-color: transparent;
+}
+[data-theme="dark-header"] .verilog-bitfield-table tr.ref-child:hover {
+  background-color: #f0f7ff;
+}
+[data-theme="dark-header"] .verilog-bitfield-table tr.reserved-row {
+  background-color: transparent;
+}
+[data-theme="dark-header"] .verilog-bitfield-table tr.reserved-row:hover {
+  background-color: #f0f0f0;
+}
+
 /* @引用链接 */
 .bf-ref-link {
   color: #4A90D9;
-  text-decoration: underline;
+  text-decoration: none;
   cursor: pointer;
   font-family: monospace;
 }
