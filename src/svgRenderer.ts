@@ -20,25 +20,24 @@ interface RenderConfig {
 /**
  * 计算字段标签所需的最小宽度（像素）
  */
-function calcMinLabelWidth(label: string, fontSize: number): number {
-  return label.length * fontSize * 0.6 + 20;
-}
-
 /**
  * 判断是否应使用纵向布局
  */
 function shouldUseVertical(fields: BitField[], totalWidth: number): boolean {
-  if (totalWidth > 64) return true;
-
   const svgWidth = 1000;
   const availableWidth = svgWidth - 120;
+  const fontSize = 22;
 
   for (const field of fields) {
     const fieldName = field.isReserved ? 'reserved' : (field.isReference ? `@${field.refName}` : field.name);
-    const label = `${fieldName}[${field.msb}:${field.lsb}]`;
+    const selfHigh = field.width - 1;
+    const selfLabel = selfHigh === 0 ? fieldName : `${fieldName}[${selfHigh}:0]`;
     const widthRatio = field.width / totalWidth;
     const boxWidth = widthRatio * availableWidth;
-    const minWidth = calcMinLabelWidth(label, 14);
+    // 模拟渲染时 textWidth = boxWidth - 16 的实际空白
+    const textWidth = boxWidth - 16;
+    // monospace 字符宽 ≈ fontSize * 0.6，需额外 +16 容纳左右空白
+    const minWidth = selfLabel.length * fontSize * 0.6 + 16 + 8;
     if (boxWidth < minWidth) return true;
   }
   return false;
@@ -68,9 +67,9 @@ export function renderBlockSvg(block: FieldBlock, theme: SvgTheme = 'pastel', bo
  */
 function renderHorizontal(fields: BitField[], config: RenderConfig): string {
   const svgWidth = 1000;
-  const svgHeight = config.boxHeight + 50;
+  const svgHeight = config.boxHeight + 60;
   const startX = 60;
-  const startY = 15;
+  const startY = 25;
   const availableWidth = svgWidth - 120;
 
   let svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${svgWidth} ${svgHeight}" width="100%">`;
@@ -124,8 +123,8 @@ function renderVertical(fields: BitField[], config: RenderConfig): string {
     currentY += rowHeight;
   }
 
-  // LSB → MSB 方向箭头（纵向：从上到下）
-  const arrowX = startX + boxWidth + 24;
+  // LSB → MSB 方向箭头（纵向：从上到下，放在左侧框外）
+  const arrowX = startX - 24;
   const arrowTop = startY;
   const arrowBottom = startY + fields.length * rowHeight;
   svg += `<line x1="${arrowX}" y1="${arrowTop + 8}" x2="${arrowX}" y2="${arrowBottom - 8}" stroke="#999" stroke-width="1.5"/>`;
@@ -184,10 +183,10 @@ function renderFieldBox(
   const annotationFontSize = fontSize * 0.7;
 
   if (layoutDirection === 'vertical') {
-    // 纵向：标注在左侧，右对齐
-    const annotX = x - 8;
+    // 纵向：标注在右侧，左对齐（左侧空间不足时 3 位数字标注不会被 viewBox 裁剪）
+    const annotX = x + width + 8;
     const annotY = textY;
-    svg += `<text x="${annotX}" y="${annotY}" font-size="${annotationFontSize}" text-anchor="end" dominant-baseline="central" fill="#999" font-family="monospace">${parentLabel}</text>`;
+    svg += `<text x="${annotX}" y="${annotY}" font-size="${annotationFontSize}" text-anchor="start" dominant-baseline="central" fill="#999" font-family="monospace">${parentLabel}</text>`;
   } else {
     // 横向：标注在上方，居中
     const annotX = textX;
