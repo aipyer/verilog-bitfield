@@ -6,7 +6,8 @@
   "scripts": {
     "dev": "rollup -c rollup.config.mjs -w",
     "build": "rollup -c rollup.config.mjs",
-    "test": "jest"
+    "test": "jest",
+    "lint": "eslint"
   },
   "keywords": [
     "obsidian",
@@ -23,10 +24,18 @@
   "devDependencies": {
     "@rollup/plugin-commonjs": "^28.0.0",
     "@rollup/plugin-node-resolve": "^16.0.0",
+    "@types/dompurify": "^3.0.5",
     "@types/node": "^20.0.0",
+    "@typescript-eslint/eslint-plugin": "^8.65.0",
+    "@typescript-eslint/parser": "^8.65.0",
+    "eslint": "^10.8.0",
+    "globals": "^17.8.0",
     "obsidian": "latest",
     "rollup": "^4.0.0",
     "rollup-plugin-esbuild": "^6.0.0",
     "typescript": "^5.0.0"
+  },
+  "dependencies": {
+    "dompurify": "^3.4.12"
   }
 }

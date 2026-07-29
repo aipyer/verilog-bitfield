@@ -31,8 +31,8 @@
 
 /* PDF 导出时隐藏切换按钮 */
 @media print {
-  .bf-view-toggle {
-    display: none !important;
+  body .bf-view-toggle {
+    display: none;
   }
 }
 

@@ -1,4 +1,4 @@
-import { BitField, FieldBlock } from './types';
+import type { BitField, FieldBlock } from './types';
 
 /**
  * 渲染块的 HTML 表格

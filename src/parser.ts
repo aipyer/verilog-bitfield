@@ -1,4 +1,4 @@
-import { BitField, FieldBlock, ParseError, ParseResult } from './types';
+import type { BitField, FieldBlock, ParseError, ParseResult } from './types';
 
 interface RawLine {
   lineNum: number;
@@ -83,7 +83,7 @@ export function parse(input: string): ParseResult {
 
     if (childrenLines.length > 0) {
       parseChildren(childrenLines, block.children, errors, 0, name);
-      calculateBitRanges(block.children, block.width);
+      calculateBitRanges(block.children);
       autoFillReserved(block.children, block.width);
     }
 
@@ -112,7 +112,7 @@ function parseChildren(
   children: BitField[],
   errors: ParseError[],
   baseIndent: number,
-  parentName: string
+  _parentName: string
 ): void {
   const stack: { field: BitField; indent: number }[] = [];
 
@@ -173,14 +173,14 @@ function parseChildren(
  * 计算 bit 范围
  * 靠前定义的是 LSB，靠后定义的是 MSB
  */
-function calculateBitRanges(fields: BitField[], parentWidth: number): void {
+function calculateBitRanges(fields: BitField[]): void {
   let currentLsb = 0;
   for (const field of fields) {
     field.lsb = currentLsb;
     field.msb = currentLsb + field.width - 1;
     currentLsb = field.msb + 1;
     if (!field.isReference && field.children && field.children.length > 0) {
-      calculateBitRanges(field.children, field.width);
+      calculateBitRanges(field.children);
     }
   }
 }
@@ -202,7 +202,7 @@ function autoFillReserved(fields: BitField[], parentWidth: number): void {
       children: []
     };
     fields.push(reserved);
-    calculateBitRanges(fields, parentWidth);
+    calculateBitRanges(fields);
   }
 }
 

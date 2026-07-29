@@ -7,7 +7,8 @@ export default {
   output: {
     file: 'main.js',
     format: 'cjs',
-    sourcemap: 'inline'
+    sourcemap: 'inline',
+    exports: 'named'
   },
   external: ['obsidian'],
   plugins: [

@@ -1,4 +1,5 @@
-import { App, PluginSettingTab, Setting } from 'obsidian';
+import type { App} from 'obsidian';
+import { PluginSettingTab, Setting } from 'obsidian';
 import type VerilogBitfieldPlugin from './main';
 import type { TableTheme } from './main';
 import type { SvgTheme } from './colors';
@@ -29,7 +30,7 @@ export class VerilogBitfieldSettingTab extends PluginSettingTab {
     const { containerEl } = this;
     containerEl.empty();
 
-    containerEl.createEl('h2', { text: 'Verilog Bitfield' });
+    new Setting(containerEl).setName('Verilog Bitfield').setHeading();
 
     // SVG 主题
     new Setting(containerEl)

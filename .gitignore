@@ -1,4 +1,5 @@
 node_modules/
+.eslintcache
 *.bak
 src.bak/
 main.js.bak

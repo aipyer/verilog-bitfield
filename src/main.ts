@@ -1,10 +1,12 @@
-import { Plugin, MarkdownPostProcessorContext } from 'obsidian';
+import type { MarkdownPostProcessorContext } from 'obsidian';
+import { Plugin } from 'obsidian';
 import { parse } from './parser';
 import { renderBlockSvg } from './svgRenderer';
 import { renderBlockTable } from './tableRenderer';
-import { RegistryEntry, FieldBlock } from './types';
+import type { RegistryEntry, FieldBlock } from './types';
+import { sanitizeHtml } from './utils/sanitize';
 import { VerilogBitfieldSettingTab } from './settings';
-import { SvgTheme } from './colors';
+import type { SvgTheme } from './colors';
 
 export type TableTheme = 'default' | 'minimal' | 'zebra' | 'clean' | 'dark-header';
 
@@ -27,7 +29,7 @@ export default class VerilogBitfieldPlugin extends Plugin {
   private pluginData: PluginData = DEFAULT_DATA;
 
   async onload() {
-    this.pluginData = Object.assign({}, DEFAULT_DATA, await this.loadData());
+    this.pluginData = Object.assign({}, DEFAULT_DATA, (await this.loadData()) as PluginData);
     this.addSettingTab(new VerilogBitfieldSettingTab(this.app, this));
     this.registerMarkdownCodeBlockProcessor('verilog-bitfield', this.processBitfield.bind(this));
     // 应用保存的表格行高
@@ -49,11 +51,12 @@ export default class VerilogBitfieldPlugin extends Plugin {
       return;
     }
 
-    for (const [name, block] of result.blocks!) {
+    if (!result.blocks) return;
+    for (const [name, block] of result.blocks) {
       this.renderBlock(name, block, el);
     }
 
-    setTimeout(() => this.resolvePendingRefs(), 50);
+    window.setTimeout(() => this.resolvePendingRefs(), 50);
   }
 
   private renderBlock(name: string, block: FieldBlock, parentEl: HTMLElement) {
@@ -72,13 +75,15 @@ export default class VerilogBitfieldPlugin extends Plugin {
 
     const contentWrap = container.createEl('div', { cls: 'verilog-bitfield-content' });
     const svgContainer = contentWrap.createEl('div', { cls: 'verilog-bitfield-svg' });
-    svgContainer.innerHTML = renderBlockSvg(block, this.pluginData.svgTheme || 'pastel', this.pluginData.svgBoxHeight || 44);
+    svgContainer.innerHTML = sanitizeHtml(
+      renderBlockSvg(block, this.pluginData.svgTheme || 'pastel', this.pluginData.svgBoxHeight || 44),
+    );
     this.setupNavigationHandlers(svgContainer);
     this.setupTooltipHandlers(svgContainer);
 
     const tableContainer = contentWrap.createEl('div', { cls: 'verilog-bitfield-table-container' });
     tableContainer.setAttribute('data-theme', this.pluginData.tableTheme || 'default');
-    tableContainer.innerHTML = renderBlockTable(block);
+    tableContainer.innerHTML = sanitizeHtml(renderBlockTable(block));
     this.setupTableNavigationHandlers(tableContainer);
     this.setupTableTooltipHandlers(tableContainer);
 
@@ -127,7 +132,7 @@ export default class VerilogBitfieldPlugin extends Plugin {
     for (const [, entry] of this.blockRegistry) {
       const svgContainer = entry.element.querySelector('.verilog-bitfield-svg') as HTMLElement | null;
       if (svgContainer) {
-        svgContainer.innerHTML = renderBlockSvg(entry.block, theme, this.pluginData.svgBoxHeight || 44);
+        svgContainer.innerHTML = sanitizeHtml(renderBlockSvg(entry.block, theme, this.pluginData.svgBoxHeight || 44));
         this.setupNavigationHandlers(svgContainer);
         this.setupTooltipHandlers(svgContainer);
       }
@@ -173,7 +178,7 @@ export default class VerilogBitfieldPlugin extends Plugin {
     if (!entry) return;
     entry.element.scrollIntoView({ behavior: 'smooth', block: 'center' });
     entry.element.classList.add('bf-highlight');
-    setTimeout(() => entry.element.classList.remove('bf-highlight'), 1500);
+    window.setTimeout(() => entry.element.classList.remove('bf-highlight'), 1500);
   }
 
   // ─── 悬浮 tooltip ───
@@ -234,7 +239,7 @@ export default class VerilogBitfieldPlugin extends Plugin {
   }
 
   private scheduleTooltipRemove() {
-    this.tooltipRemoveTimer = setTimeout(() => {
+    this.tooltipRemoveTimer = window.setTimeout(() => {
       this.removeTooltip();
     }, 200);
   }
@@ -253,10 +258,10 @@ export default class VerilogBitfieldPlugin extends Plugin {
 
     if (view === 'svg') {
       const svgWrap = tooltip.createEl('div', { cls: 'bf-tooltip-svg' });
-      svgWrap.innerHTML = renderBlockSvg(entry.block, this.pluginData.svgTheme || 'pastel', this.pluginData.svgBoxHeight || 44);
+      svgWrap.innerHTML = sanitizeHtml(renderBlockSvg(entry.block, this.pluginData.svgTheme || 'pastel', this.pluginData.svgBoxHeight || 44));
     } else {
       const tableWrap = tooltip.createEl('div', { cls: 'bf-tooltip-table' });
-      tableWrap.innerHTML = renderBlockTable(entry.block);
+      tableWrap.innerHTML = sanitizeHtml(renderBlockTable(entry.block));
     }
 
     tooltip.createEl('p', { text: '单击跳转查看完整定义', cls: 'bf-tooltip-hint' });
@@ -294,13 +299,15 @@ export default class VerilogBitfieldPlugin extends Plugin {
 
   private collectPendingRefs(container: HTMLElement) {
     container.querySelectorAll('[data-ref]').forEach((el) => {
-      const refName = el.getAttribute('data-ref')!;
+      const refName = el.getAttribute('data-ref') ?? '';
+      if (!refName) return;
       if (!this.blockRegistry.has(refName)) {
         this.pendingRefs.push({ element: el as HTMLElement, targetName: refName });
       }
     });
     container.querySelectorAll('.bf-ref-link').forEach((el) => {
-      const targetName = el.getAttribute('data-target')!;
+      const targetName = el.getAttribute('data-target') ?? '';
+      if (!targetName) return;
       if (!this.blockRegistry.has(targetName)) {
         this.pendingRefs.push({ element: el as HTMLElement, targetName });
         (el as HTMLElement).classList.add('bf-ref-unresolved');

@@ -1,5 +1,6 @@
-import { BitField, FieldBlock } from './types';
-import { getFieldColor, SvgTheme } from './colors';
+import type { BitField, FieldBlock } from './types';
+import type { SvgTheme } from './colors';
+import { getFieldColor } from './colors';
 
 /**
  * SVG 渲染配置
@@ -34,8 +35,6 @@ function shouldUseVertical(fields: BitField[], totalWidth: number): boolean {
     const selfLabel = selfHigh === 0 ? fieldName : `${fieldName}[${selfHigh}:0]`;
     const widthRatio = field.width / totalWidth;
     const boxWidth = widthRatio * availableWidth;
-    // 模拟渲染时 textWidth = boxWidth - 16 的实际空白
-    const textWidth = boxWidth - 16;
     // monospace 字符宽 ≈ fontSize * 0.6，需额外 +16 容纳左右空白
     const minWidth = selfLabel.length * fontSize * 0.6 + 16 + 8;
     if (boxWidth < minWidth) return true;
@@ -155,7 +154,6 @@ function renderFieldBox(
   const isRsv = field.isReserved;
   const fieldName = isRsv ? 'reserved' : (isRef ? `@${field.refName}` : field.name);
 
-  const strokeDash = isRef ? ' stroke-dasharray="6,3"' : '';
   const strokeColor = isRef ? '#4A90D9' : '#fff';
   svg += `<rect x="${x}" y="${y}" width="${width}" height="${height}" fill="${color}" stroke="${strokeColor}" stroke-width="2" rx="4" ry="4" data-field="${fieldName}"${isRef ? ` data-ref="${field.refName}"` : ''} style="cursor:${isRef ? 'pointer' : 'default'}"/>`;
 
