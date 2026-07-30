@@ -1,7 +1,7 @@
-import type { App} from 'obsidian';
+import type { App } from 'obsidian';
 import { PluginSettingTab, Setting } from 'obsidian';
 import type VerilogBitfieldPlugin from './main';
-import type { TableTheme } from './main';
+import type { TableTheme, PluginData as PluginDataTypes } from './main';
 import type { SvgTheme } from './colors';
 
 const TABLE_THEME_LABELS: Record<TableTheme, string> = {
@@ -26,11 +26,14 @@ export class VerilogBitfieldSettingTab extends PluginSettingTab {
     this.plugin = plugin;
   }
 
+  get data(): PluginDataTypes { return this.plugin.savedData; }
+  set data(v: PluginDataTypes) { this.plugin.savedData = v; }
+
   display(): void {
     const { containerEl } = this;
     containerEl.empty();
 
-    new Setting(containerEl).setName('Verilog Bitfield').setHeading();
+    new Setting(containerEl).setName('Bitfield').setHeading();
 
     // SVG 主题
     new Setting(containerEl)
@@ -40,10 +43,10 @@ export class VerilogBitfieldSettingTab extends PluginSettingTab {
         for (const [key, label] of Object.entries(SVG_THEME_LABELS)) {
           drop.addOption(key, label);
         }
-        drop.setValue(this.plugin.pluginData.svgTheme || 'pastel');
+        drop.setValue(this.data.svgTheme || 'pastel');
         drop.onChange(async (value) => {
-          this.plugin.pluginData.svgTheme = value as SvgTheme;
-          await this.plugin.saveData(this.plugin.pluginData);
+          this.data.svgTheme = value as SvgTheme;
+          await this.plugin.saveData(this.data);
           this.plugin.rerenderAllSvg();
         });
       });
@@ -54,11 +57,10 @@ export class VerilogBitfieldSettingTab extends PluginSettingTab {
       .setDesc('Height of each field row in bitfield diagrams (px)')
       .addSlider(slider => {
         slider.setLimits(28, 80, 2);
-        slider.setValue(this.plugin.pluginData.svgBoxHeight || 38);
-        slider.setDynamicTooltip();
+        slider.setValue(this.data.svgBoxHeight || 38);
         slider.onChange(async (value) => {
-          this.plugin.pluginData.svgBoxHeight = value;
-          await this.plugin.saveData(this.plugin.pluginData);
+          this.data.svgBoxHeight = value;
+          await this.plugin.saveData(this.data);
           this.plugin.rerenderAllSvg();
         });
       });
@@ -71,10 +73,10 @@ export class VerilogBitfieldSettingTab extends PluginSettingTab {
         for (const [key, label] of Object.entries(TABLE_THEME_LABELS)) {
           drop.addOption(key, label);
         }
-        drop.setValue(this.plugin.pluginData.tableTheme || 'default');
+        drop.setValue(this.data.tableTheme || 'default');
         drop.onChange(async (value) => {
-          this.plugin.pluginData.tableTheme = value as TableTheme;
-          await this.plugin.saveData(this.plugin.pluginData);
+          this.data.tableTheme = value as TableTheme;
+          await this.plugin.saveData(this.data);
           this.applyTableTheme(value as TableTheme);
         });
       });
@@ -85,11 +87,10 @@ export class VerilogBitfieldSettingTab extends PluginSettingTab {
       .setDesc('Row height for rendered tables (px)')
       .addSlider(slider => {
         slider.setLimits(18, 48, 2);
-        slider.setValue(this.plugin.pluginData.tableRowHeight || 28);
-        slider.setDynamicTooltip();
+        slider.setValue(this.data.tableRowHeight || 28);
         slider.onChange(async (value) => {
-          this.plugin.pluginData.tableRowHeight = value;
-          await this.plugin.saveData(this.plugin.pluginData);
+          this.data.tableRowHeight = value;
+          await this.plugin.saveData(this.data);
           this.applyTableRowHeight(value);
         });
       });

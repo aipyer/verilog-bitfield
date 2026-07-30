@@ -28,6 +28,10 @@ export default class VerilogBitfieldPlugin extends Plugin {
   private tooltipRemoveTimer: ReturnType<typeof setTimeout> | null = null;
   private pluginData: PluginData = DEFAULT_DATA;
 
+  // public accessor for SettingTab
+  get savedData(): PluginData { return this.pluginData; }
+  set savedData(v: PluginData) { this.pluginData = v; }
+
   async onload() {
     this.pluginData = Object.assign({}, DEFAULT_DATA, (await this.loadData()) as PluginData);
     this.addSettingTab(new VerilogBitfieldSettingTab(this.app, this));
@@ -126,7 +130,7 @@ export default class VerilogBitfieldPlugin extends Plugin {
     return btn;
   }
 
-  /** 重新渲染所有 SVG 位域图（主题变更时调用） */
+  /** Rerender all SVGs with current theme — public for SettingTab */
   public rerenderAllSvg(): void {
     const theme = this.pluginData.svgTheme || 'pastel';
     for (const [, entry] of this.blockRegistry) {
@@ -191,7 +195,7 @@ export default class VerilogBitfieldPlugin extends Plugin {
       if (refName) {
         // 鼠标回到源元素上，取消待删除定时器
         if (this.tooltipRemoveTimer) {
-          clearTimeout(this.tooltipRemoveTimer);
+          window.clearTimeout(this.tooltipRemoveTimer);
           this.tooltipRemoveTimer = null;
         }
         const view = this.getViewForBlock(refName);
@@ -211,7 +215,7 @@ export default class VerilogBitfieldPlugin extends Plugin {
       const target = e.target as HTMLElement;
       if (target.classList.contains('bf-ref-link')) {
         if (this.tooltipRemoveTimer) {
-          clearTimeout(this.tooltipRemoveTimer);
+          window.clearTimeout(this.tooltipRemoveTimer);
           this.tooltipRemoveTimer = null;
         }
         const refName = target.getAttribute('data-target');
@@ -250,8 +254,7 @@ export default class VerilogBitfieldPlugin extends Plugin {
 
     this.removeTooltip();
 
-    const tooltip = document.createElement('div');
-    tooltip.className = 'bf-tooltip';
+    const tooltip = document.body.createEl('div', { cls: 'bf-tooltip' });
 
     const desc = entry.block.description ? ` — ${entry.block.description}` : '';
     tooltip.createEl('p', { text: `${blockName}${desc}`, cls: 'bf-tooltip-header' });
@@ -281,7 +284,7 @@ export default class VerilogBitfieldPlugin extends Plugin {
     // 鼠标进入 tooltip 时取消待删除定时器
     tooltip.addEventListener('mouseenter', () => {
       if (this.tooltipRemoveTimer) {
-        clearTimeout(this.tooltipRemoveTimer);
+        window.clearTimeout(this.tooltipRemoveTimer);
         this.tooltipRemoveTimer = null;
       }
     });
