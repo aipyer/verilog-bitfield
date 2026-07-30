@@ -1,4 +1,4 @@
-import type { App } from 'obsidian';
+import type { App, SettingDefinitionItem } from 'obsidian';
 import { PluginSettingTab, Setting } from 'obsidian';
 import type VerilogBitfieldPlugin from './main';
 import type { TableTheme, PluginData as PluginDataTypes } from './main';
@@ -28,6 +28,59 @@ export class VerilogBitfieldSettingTab extends PluginSettingTab {
 
   get data(): PluginDataTypes { return this.plugin.savedData; }
   set data(v: PluginDataTypes) { this.plugin.savedData = v; }
+
+  /** Declarative settings definitions for Obsidian 1.13.0+ search */
+  getSettingDefinitions(): SettingDefinitionItem[] {
+    return [{
+      type: 'group',
+      items: [
+        {
+          name: 'SVG theme',
+          desc: 'Color scheme for bitfield diagrams',
+          control: {
+            key: 'svgTheme',
+            type: 'dropdown',
+            defaultValue: 'pastel',
+            options: SVG_THEME_LABELS,
+          },
+        },
+        {
+          name: 'SVG row height',
+          desc: 'Height of each field row in bitfield diagrams (px)',
+          control: {
+            key: 'svgBoxHeight',
+            type: 'slider',
+            defaultValue: 38,
+            min: 28,
+            max: 80,
+            step: 2,
+          },
+        },
+        {
+          name: 'Table theme',
+          desc: 'Visual style for rendered tables',
+          control: {
+            key: 'tableTheme',
+            type: 'dropdown',
+            defaultValue: 'default',
+            options: TABLE_THEME_LABELS,
+          },
+        },
+        {
+          name: 'Table row height',
+          desc: 'Row height for rendered tables (px)',
+          control: {
+            key: 'tableRowHeight',
+            type: 'slider',
+            defaultValue: 28,
+            min: 18,
+            max: 48,
+            step: 2,
+          },
+        },
+      ],
+    }];
+  }
 
   display(): void {
     const { containerEl } = this;

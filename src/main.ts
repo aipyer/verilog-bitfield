@@ -1,10 +1,9 @@
 import type { MarkdownPostProcessorContext } from 'obsidian';
-import { Plugin } from 'obsidian';
+import { createFragment, Plugin } from 'obsidian';
 import { parse } from './parser';
 import { renderBlockSvg } from './svgRenderer';
 import { renderBlockTable } from './tableRenderer';
 import type { RegistryEntry, FieldBlock } from './types';
-import { sanitizeHtml } from './utils/sanitize';
 import { VerilogBitfieldSettingTab } from './settings';
 import type { SvgTheme } from './colors';
 
@@ -79,15 +78,17 @@ export default class VerilogBitfieldPlugin extends Plugin {
 
     const contentWrap = container.createEl('div', { cls: 'verilog-bitfield-content' });
     const svgContainer = contentWrap.createEl('div', { cls: 'verilog-bitfield-svg' });
-    svgContainer.innerHTML = sanitizeHtml(
-      renderBlockSvg(block, this.pluginData.svgTheme || 'pastel', this.pluginData.svgBoxHeight || 44),
-    );
+    createFragment((fragment) => {
+      fragment.setHTML(renderBlockSvg(block, this.pluginData.svgTheme || 'pastel', this.pluginData.svgBoxHeight || 44));
+    }).appendTo(svgContainer);
     this.setupNavigationHandlers(svgContainer);
     this.setupTooltipHandlers(svgContainer);
 
     const tableContainer = contentWrap.createEl('div', { cls: 'verilog-bitfield-table-container' });
     tableContainer.setAttribute('data-theme', this.pluginData.tableTheme || 'default');
-    tableContainer.innerHTML = sanitizeHtml(renderBlockTable(block));
+    createFragment((fragment) => {
+      fragment.setHTML(renderBlockTable(block));
+    }).appendTo(tableContainer);
     this.setupTableNavigationHandlers(tableContainer);
     this.setupTableTooltipHandlers(tableContainer);
 
@@ -136,7 +137,9 @@ export default class VerilogBitfieldPlugin extends Plugin {
     for (const [, entry] of this.blockRegistry) {
       const svgContainer = entry.element.querySelector('.verilog-bitfield-svg') as HTMLElement | null;
       if (svgContainer) {
-        svgContainer.innerHTML = sanitizeHtml(renderBlockSvg(entry.block, theme, this.pluginData.svgBoxHeight || 44));
+        createFragment((fragment) => {
+          fragment.setHTML(renderBlockSvg(entry.block, theme, this.pluginData.svgBoxHeight || 44));
+        }).appendTo(svgContainer);
         this.setupNavigationHandlers(svgContainer);
         this.setupTooltipHandlers(svgContainer);
       }
@@ -261,10 +264,14 @@ export default class VerilogBitfieldPlugin extends Plugin {
 
     if (view === 'svg') {
       const svgWrap = tooltip.createEl('div', { cls: 'bf-tooltip-svg' });
-      svgWrap.innerHTML = sanitizeHtml(renderBlockSvg(entry.block, this.pluginData.svgTheme || 'pastel', this.pluginData.svgBoxHeight || 44));
+      createFragment((fragment) => {
+        fragment.setHTML(renderBlockSvg(entry.block, this.pluginData.svgTheme || 'pastel', this.pluginData.svgBoxHeight || 44));
+      }).appendTo(svgWrap);
     } else {
       const tableWrap = tooltip.createEl('div', { cls: 'bf-tooltip-table' });
-      tableWrap.innerHTML = sanitizeHtml(renderBlockTable(entry.block));
+      createFragment((fragment) => {
+        fragment.setHTML(renderBlockTable(entry.block));
+      }).appendTo(tableWrap);
     }
 
     tooltip.createEl('p', { text: '单击跳转查看完整定义', cls: 'bf-tooltip-hint' });
