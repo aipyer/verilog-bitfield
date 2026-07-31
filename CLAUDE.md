@@ -1,4 +1,4 @@
-# verilog-bitfield 项目规则
+# bitfield 项目规则
 
 ## Commit Author
 

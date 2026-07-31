@@ -1,6 +1,6 @@
 import type { App, SettingDefinitionItem } from 'obsidian';
 import { PluginSettingTab, Setting } from 'obsidian';
-import type VerilogBitfieldPlugin from './main';
+import type BitfieldPlugin from './main';
 import type { TableTheme, PluginData as PluginDataTypes } from './main';
 import type { SvgTheme } from './colors';
 
@@ -18,10 +18,10 @@ const SVG_THEME_LABELS: Record<SvgTheme, string> = {
   mono: 'Mono — grayscale',
 };
 
-export class VerilogBitfieldSettingTab extends PluginSettingTab {
-  plugin: VerilogBitfieldPlugin;
+export class BitfieldSettingTab extends PluginSettingTab {
+  plugin: BitfieldPlugin;
 
-  constructor(app: App, plugin: VerilogBitfieldPlugin) {
+  constructor(app: App, plugin: BitfieldPlugin) {
     super(app, plugin);
     this.plugin = plugin;
   }
@@ -150,7 +150,7 @@ export class VerilogBitfieldSettingTab extends PluginSettingTab {
   }
 
   private applyTableTheme(theme: TableTheme): void {
-    document.querySelectorAll('.verilog-bitfield-table-container').forEach(el => {
+    document.querySelectorAll('.bitfield-table-container').forEach(el => {
       el.setAttribute('data-theme', theme);
     });
   }

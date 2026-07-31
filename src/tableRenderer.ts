@@ -10,7 +10,7 @@ export function renderBlockTable(block: FieldBlock): string {
     collectRows(child, 0, rows);
   }
 
-  let html = '<table class="verilog-bitfield-table">';
+  let html = '<table class="bitfield-table">';
   html += '<thead><tr>';
   html += '<th>Field</th>';
   html += '<th>Width</th>';

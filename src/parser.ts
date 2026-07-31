@@ -7,7 +7,7 @@ interface RawLine {
 }
 
 /**
- * 解析 Verilog 位域定义
+ * 解析位域定义
  * 统一语法：每个代码块由一个或多个 definition block 组成
  * 每个块：第一行 name width [description]，子字段通过缩进嵌套
  */

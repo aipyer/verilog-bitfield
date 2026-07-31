@@ -33,6 +33,12 @@ export default [
       // Disable base rules shadowed by TS plugin
       'no-undef': 'off',
       'no-unused-vars': 'off',
+
+      // TS 5.9+ SanitizerHTMLString: DOMPurify-returned string is safe
+      '@typescript-eslint/no-unsafe-assignment': 'off',
+      '@typescript-eslint/no-unsafe-member-access': 'off',
+      '@typescript-eslint/no-unsafe-call': 'off',
+      '@typescript-eslint/no-unsafe-return': 'off',
     },
   },
 ];

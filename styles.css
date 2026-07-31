@@ -1,19 +1,19 @@
-/* Verilog Bitfield 插件样式 */
+/* Bitfield 插件样式 */
 
-.verilog-bitfield-container {
+.bitfield-container {
   margin: 16px 0;
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
 }
 
 /* 标题行：文字 + 切换按钮 */
-.verilog-bitfield-header-row {
+.bitfield-header-row {
   display: flex;
   align-items: center;
   justify-content: space-between;
   margin-bottom: 8px;
 }
 
-.verilog-bitfield-header {
+.bitfield-header {
   margin: 0;
   color: #555;
   font-weight: 500;
@@ -55,47 +55,47 @@
 }
 
 /* 视图切换 */
-.verilog-bitfield-content[data-view="svg"] .verilog-bitfield-svg { display: block; }
-.verilog-bitfield-content[data-view="svg"] .verilog-bitfield-table-container { display: none; }
-.verilog-bitfield-content[data-view="table"] .verilog-bitfield-svg { display: none; }
-.verilog-bitfield-content[data-view="table"] .verilog-bitfield-table-container { display: block; }
+.bitfield-content[data-view="svg"] .bitfield-svg { display: block; }
+.bitfield-content[data-view="svg"] .bitfield-table-container { display: none; }
+.bitfield-content[data-view="table"] .bitfield-svg { display: none; }
+.bitfield-content[data-view="table"] .bitfield-table-container { display: block; }
 
 /* SVG 位域图 */
-.verilog-bitfield-svg {
+.bitfield-svg {
   overflow-x: auto;
 }
 
-.verilog-bitfield-svg svg {
+.bitfield-svg svg {
   max-width: 100%;
   height: auto;
 }
 
-.verilog-bitfield-svg svg rect {
+.bitfield-svg svg rect {
   transition: opacity 0.2s;
 }
 
-.verilog-bitfield-svg svg rect:hover {
+.bitfield-svg svg rect:hover {
   opacity: 0.8;
 }
 
-.verilog-bitfield-svg svg text {
+.bitfield-svg svg text {
   pointer-events: auto;
   user-select: none;
 }
 
 /* 表格 */
-.verilog-bitfield-table-container {
+.bitfield-table-container {
   overflow-x: auto;
 }
 
-.verilog-bitfield-table {
+.bitfield-table {
   width: 100%;
   border-collapse: collapse;
   table-layout: auto;
 }
 
-.verilog-bitfield-table th,
-.verilog-bitfield-table td {
+.bitfield-table th,
+.bitfield-table td {
   border: 1px solid #ddd;
   padding: 0 8px;
   text-align: center;
@@ -104,153 +104,153 @@
   height: var(--bf-table-row-height, 28px);
 }
 
-.verilog-bitfield-table th:last-child,
-.verilog-bitfield-table td:last-child {
+.bitfield-table th:last-child,
+.bitfield-table td:last-child {
   text-align: left;
 }
 
-.verilog-bitfield-table th {
+.bitfield-table th {
   background-color: #f5f5f5;
   font-weight: 600;
 }
 
-.verilog-bitfield-table tr:hover {
+.bitfield-table tr:hover {
   background-color: #f9f9f9;
 }
 
-.verilog-bitfield-table td:first-child {
+.bitfield-table td:first-child {
   font-family: monospace;
   white-space: nowrap;
 }
 
 /* @引用行 */
-.verilog-bitfield-table tr.ref-child {
+.bitfield-table tr.ref-child {
   background-color: #f0f7ff;
 }
 
-.verilog-bitfield-table tr.ref-child:hover {
+.bitfield-table tr.ref-child:hover {
   background-color: #e0efff;
 }
 
 /* reserved 行 */
-.verilog-bitfield-table tr.reserved-row {
+.bitfield-table tr.reserved-row {
   background-color: #f5f5f5;
 }
 
-.verilog-bitfield-table tr.reserved-row td {
+.bitfield-table tr.reserved-row td {
   font-style: italic;
   color: #999;
 }
 
-.verilog-bitfield-table tr.reserved-row:hover {
+.bitfield-table tr.reserved-row:hover {
   background-color: #efefef;
 }
 
 /* ── minimal 主题：去竖线，只保留横线 ── */
-[data-theme="minimal"] .verilog-bitfield-table th,
-[data-theme="minimal"] .verilog-bitfield-table td {
+[data-theme="minimal"] .bitfield-table th,
+[data-theme="minimal"] .bitfield-table td {
   border: none;
   border-bottom: 1px solid #eee;
 }
-[data-theme="minimal"] .verilog-bitfield-table th {
+[data-theme="minimal"] .bitfield-table th {
   border-bottom: 2px solid #ddd;
 }
-[data-theme="minimal"] .verilog-bitfield-table tr:last-child td {
+[data-theme="minimal"] .bitfield-table tr:last-child td {
   border-bottom: none;
 }
-[data-theme="minimal"] .verilog-bitfield-table tr.ref-child {
+[data-theme="minimal"] .bitfield-table tr.ref-child {
   background-color: transparent;
 }
-[data-theme="minimal"] .verilog-bitfield-table tr.ref-child:hover {
+[data-theme="minimal"] .bitfield-table tr.ref-child:hover {
   background-color: #f0f7ff;
 }
-[data-theme="minimal"] .verilog-bitfield-table tr.reserved-row {
+[data-theme="minimal"] .bitfield-table tr.reserved-row {
   background-color: transparent;
 }
-[data-theme="minimal"] .verilog-bitfield-table tr.reserved-row:hover {
+[data-theme="minimal"] .bitfield-table tr.reserved-row:hover {
   background-color: #f9f9f9;
 }
 
 /* ── zebra 主题：奇偶行交替底色，无网格线 ── */
-[data-theme="zebra"] .verilog-bitfield-table th,
-[data-theme="zebra"] .verilog-bitfield-table td {
+[data-theme="zebra"] .bitfield-table th,
+[data-theme="zebra"] .bitfield-table td {
   border: none;
 }
-[data-theme="zebra"] .verilog-bitfield-table th {
+[data-theme="zebra"] .bitfield-table th {
   border-bottom: 2px solid #ddd;
 }
-[data-theme="zebra"] .verilog-bitfield-table tbody tr:nth-child(even) {
+[data-theme="zebra"] .bitfield-table tbody tr:nth-child(even) {
   background-color: #f9f9f9;
 }
-[data-theme="zebra"] .verilog-bitfield-table tbody tr:nth-child(even):hover {
+[data-theme="zebra"] .bitfield-table tbody tr:nth-child(even):hover {
   background-color: #f0f0f0;
 }
-[data-theme="zebra"] .verilog-bitfield-table tr.ref-child {
+[data-theme="zebra"] .bitfield-table tr.ref-child {
   background-color: #f0f7ff;
 }
-[data-theme="zebra"] .verilog-bitfield-table tr.ref-child:hover {
+[data-theme="zebra"] .bitfield-table tr.ref-child:hover {
   background-color: #e0efff;
 }
-[data-theme="zebra"] .verilog-bitfield-table tr.reserved-row {
+[data-theme="zebra"] .bitfield-table tr.reserved-row {
   background-color: #f5f5f5;
 }
-[data-theme="zebra"] .verilog-bitfield-table tr.reserved-row:hover {
+[data-theme="zebra"] .bitfield-table tr.reserved-row:hover {
   background-color: #efefef;
 }
 
 /* ── clean 主题：无边框，纯留白分隔 ── */
-[data-theme="clean"] .verilog-bitfield-table th,
-[data-theme="clean"] .verilog-bitfield-table td {
+[data-theme="clean"] .bitfield-table th,
+[data-theme="clean"] .bitfield-table td {
   border: none;
 }
-[data-theme="clean"] .verilog-bitfield-table th {
+[data-theme="clean"] .bitfield-table th {
   border-bottom: 2px solid #333;
   font-weight: 600;
 }
-[data-theme="clean"] .verilog-bitfield-table tr {
+[data-theme="clean"] .bitfield-table tr {
   border-bottom: 1px solid #eee;
 }
-[data-theme="clean"] .verilog-bitfield-table tr.ref-child {
+[data-theme="clean"] .bitfield-table tr.ref-child {
   background-color: transparent;
 }
-[data-theme="clean"] .verilog-bitfield-table tr.ref-child:hover {
+[data-theme="clean"] .bitfield-table tr.ref-child:hover {
   background-color: #f0f7ff;
 }
-[data-theme="clean"] .verilog-bitfield-table tr.reserved-row {
+[data-theme="clean"] .bitfield-table tr.reserved-row {
   background-color: transparent;
 }
-[data-theme="clean"] .verilog-bitfield-table tr.reserved-row:hover {
+[data-theme="clean"] .bitfield-table tr.reserved-row:hover {
   background-color: #f9f9f9;
 }
 
 /* ── dark-header 主题：深色表头白字，表体无交替色 ── */
-[data-theme="dark-header"] .verilog-bitfield-table th,
-[data-theme="dark-header"] .verilog-bitfield-table td {
+[data-theme="dark-header"] .bitfield-table th,
+[data-theme="dark-header"] .bitfield-table td {
   border: none;
   border-bottom: 1px solid #eee;
 }
-[data-theme="dark-header"] .verilog-bitfield-table th {
+[data-theme="dark-header"] .bitfield-table th {
   background-color: #333;
   color: #fff;
   border-bottom: none;
   font-weight: 600;
 }
-[data-theme="dark-header"] .verilog-bitfield-table tr:last-child td {
+[data-theme="dark-header"] .bitfield-table tr:last-child td {
   border-bottom: none;
 }
-[data-theme="dark-header"] .verilog-bitfield-table tr:hover {
+[data-theme="dark-header"] .bitfield-table tr:hover {
   background-color: #f0f0f0;
 }
-[data-theme="dark-header"] .verilog-bitfield-table tr.ref-child {
+[data-theme="dark-header"] .bitfield-table tr.ref-child {
   background-color: transparent;
 }
-[data-theme="dark-header"] .verilog-bitfield-table tr.ref-child:hover {
+[data-theme="dark-header"] .bitfield-table tr.ref-child:hover {
   background-color: #f0f7ff;
 }
-[data-theme="dark-header"] .verilog-bitfield-table tr.reserved-row {
+[data-theme="dark-header"] .bitfield-table tr.reserved-row {
   background-color: transparent;
 }
-[data-theme="dark-header"] .verilog-bitfield-table tr.reserved-row:hover {
+[data-theme="dark-header"] .bitfield-table tr.reserved-row:hover {
   background-color: #f0f0f0;
 }
 
@@ -359,7 +359,7 @@
 }
 
 /* 错误信息 */
-.verilog-bitfield-error {
+.bitfield-error {
   padding: 16px;
   background-color: #ffebee;
   border: 1px solid #ffcdd2;
@@ -367,11 +367,11 @@
   color: #c62828;
 }
 
-.verilog-bitfield-error p {
+.bitfield-error p {
   margin: 4px 0;
 }
 
-.verilog-bitfield-error .suggestion {
+.bitfield-error .suggestion {
   color: #666;
   font-style: italic;
 }

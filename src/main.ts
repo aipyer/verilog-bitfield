@@ -4,7 +4,7 @@ import { parse } from './parser';
 import { renderBlockSvg } from './svgRenderer';
 import { renderBlockTable } from './tableRenderer';
 import type { RegistryEntry, FieldBlock } from './types';
-import { VerilogBitfieldSettingTab } from './settings';
+import { BitfieldSettingTab } from './settings';
 import type { SvgTheme } from './colors';
 
 export type TableTheme = 'default' | 'minimal' | 'zebra' | 'clean' | 'dark-header';
@@ -19,7 +19,7 @@ export interface PluginData {
 
 export const DEFAULT_DATA: PluginData = { defaultView: 'svg', tableTheme: 'default', svgTheme: 'pastel', svgBoxHeight: 38, tableRowHeight: 28 };
 
-export default class VerilogBitfieldPlugin extends Plugin {
+export default class BitfieldPlugin extends Plugin {
   private blockRegistry: Map<string, RegistryEntry> = new Map();
   private pendingRefs: { element: HTMLElement; targetName: string }[] = [];
   private currentNotePath: string = '';
@@ -33,8 +33,8 @@ export default class VerilogBitfieldPlugin extends Plugin {
 
   async onload() {
     this.pluginData = Object.assign({}, DEFAULT_DATA, (await this.loadData()) as PluginData);
-    this.addSettingTab(new VerilogBitfieldSettingTab(this.app, this));
-    this.registerMarkdownCodeBlockProcessor('verilog-bitfield', this.processBitfield.bind(this));
+    this.addSettingTab(new BitfieldSettingTab(this.app, this));
+    this.registerMarkdownCodeBlockProcessor('bitfield', this.processBitfield.bind(this));
     // 应用保存的表格行高
     document.documentElement.style.setProperty('--bf-table-row-height', `${this.pluginData.tableRowHeight || 28}px`);
   }
@@ -64,27 +64,27 @@ export default class VerilogBitfieldPlugin extends Plugin {
 
   private renderBlock(name: string, block: FieldBlock, parentEl: HTMLElement) {
     const container = parentEl.createEl('div', {
-      cls: 'verilog-bitfield-container',
+      cls: 'bitfield-container',
       attr: { id: `bf:${name}` }
     });
 
-    const headerRow = container.createEl('div', { cls: 'verilog-bitfield-header-row' });
+    const headerRow = container.createEl('div', { cls: 'bitfield-header-row' });
     const desc = block.description ? ` — ${block.description}` : '';
     headerRow.createEl('span', {
       text: `${name}${desc} 的 ${block.width} bit 定义如下：`,
-      cls: 'verilog-bitfield-header'
+      cls: 'bitfield-header'
     });
     const toggleBtn = this.createToggleButton(headerRow);
 
-    const contentWrap = container.createEl('div', { cls: 'verilog-bitfield-content' });
-    const svgContainer = contentWrap.createEl('div', { cls: 'verilog-bitfield-svg' });
+    const contentWrap = container.createEl('div', { cls: 'bitfield-content' });
+    const svgContainer = contentWrap.createEl('div', { cls: 'bitfield-svg' });
     createFragment((fragment) => {
       fragment.setHTML(renderBlockSvg(block, this.pluginData.svgTheme || 'pastel', this.pluginData.svgBoxHeight || 44));
     }).appendTo(svgContainer);
     this.setupNavigationHandlers(svgContainer);
     this.setupTooltipHandlers(svgContainer);
 
-    const tableContainer = contentWrap.createEl('div', { cls: 'verilog-bitfield-table-container' });
+    const tableContainer = contentWrap.createEl('div', { cls: 'bitfield-table-container' });
     tableContainer.setAttribute('data-theme', this.pluginData.tableTheme || 'default');
     createFragment((fragment) => {
       fragment.setHTML(renderBlockTable(block));
@@ -135,7 +135,7 @@ export default class VerilogBitfieldPlugin extends Plugin {
   public rerenderAllSvg(): void {
     const theme = this.pluginData.svgTheme || 'pastel';
     for (const [, entry] of this.blockRegistry) {
-      const svgContainer = entry.element.querySelector('.verilog-bitfield-svg') as HTMLElement | null;
+      const svgContainer = entry.element.querySelector('.bitfield-svg') as HTMLElement | null;
       if (svgContainer) {
         createFragment((fragment) => {
           fragment.setHTML(renderBlockSvg(entry.block, theme, this.pluginData.svgBoxHeight || 44));
@@ -147,7 +147,7 @@ export default class VerilogBitfieldPlugin extends Plugin {
   }
 
   private renderErrors(el: HTMLElement, errors: { line: number; message: string; suggestion?: string }[]) {
-    el.createEl('div', { cls: 'verilog-bitfield-error' }, (errorEl) => {
+    el.createEl('div', { cls: 'bitfield-error' }, (errorEl) => {
       errorEl.createEl('p', { text: '解析错误:' });
       for (const error of errors) {
         errorEl.createEl('p', { text: `行 ${error.line}: ${error.message}` });
@@ -238,7 +238,7 @@ export default class VerilogBitfieldPlugin extends Plugin {
   private getViewForBlock(blockName: string): 'svg' | 'table' {
     const entry = this.blockRegistry.get(blockName);
     if (entry) {
-      const contentWrap = entry.element.querySelector('.verilog-bitfield-content');
+      const contentWrap = entry.element.querySelector('.bitfield-content');
       const view = contentWrap?.getAttribute('data-view') as 'svg' | 'table' | undefined;
       if (view) return view;
     }

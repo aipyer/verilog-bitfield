@@ -1,6 +1,6 @@
-# Verilog Bitfield
+# Bitfield
 
-An Obsidian plugin that renders Verilog bitfield definitions as interactive SVG diagrams and tables. Designed for chip frontend engineers to visualize bitfield layouts directly in their notes.
+An Obsidian plugin that renders bitfield definitions as interactive SVG diagrams and tables. Designed for chip frontend engineers to visualize bitfield layouts directly in their notes.
 
 ## Features
 
@@ -13,15 +13,15 @@ An Obsidian plugin that renders Verilog bitfield definitions as interactive SVG 
 - **Click to navigate** — click a `@reference` to scroll to the definition and highlight it
 - **Hover preview** — hover over a `@reference` to see a tooltip preview of the definition
 - **Auto-fill reserved** — unfilled bits are automatically padded with `reserved` at the MSB end
-- **LSB-first allocation** — fields defined earlier get lower bits, matching Verilog convention
+- **LSB-first allocation** — fields defined earlier get lower bits, matching common bitfield convention
 - **Up to 5 levels of nesting**
 
 ## Usage
 
-Wrap your bitfield definitions in a `verilog-bitfield` code block:
+Wrap your bitfield definitions in a `bitfield` code block:
 
 ````markdown
-```verilog-bitfield
+```bitfield
 uart_ctrl 32 UART Control Register
     tx_en 1 Transmit enable
     rx_en 1 Receive enable
@@ -49,7 +49,7 @@ The table view shows field name, bit width, bit range, and description with nest
 Define blocks in one code block and reference them in another:
 
 ````markdown
-```verilog-bitfield
+```bitfield
 uart_ctrl 32 UART Control Register
     tx_en 1 Transmit enable
     rx_en 1 Receive enable
@@ -63,7 +63,7 @@ uart_status 32 UART Status Register
 ````
 
 ````markdown
-```verilog-bitfield
+```bitfield
 uart_regs 64 UART Register Block
     @uart_ctrl 32 Control
     @uart_status 32 Status
@@ -77,13 +77,13 @@ Click `@uart_ctrl` in the referencing block to jump to its definition.
 ### From Obsidian Community Plugins
 
 1. Open Settings → Community plugins
-2. Search for "Verilog Bitfield"
+2. Search for "Bitfield"
 3. Install and enable
 
 ### Manual
 
-1. Download `main.js`, `manifest.json`, `styles.css` from the [latest release](https://github.com/aipyer/verilog-bitfield/releases/latest)
-2. Create a folder `verilog-bitfield` in your vault's `.obsidian/plugins/` directory
+1. Download `main.js`, `manifest.json`, `styles.css` from the [latest release](https://github.com/aipyer/bitfield/releases/latest)
+2. Create a folder `bitfield` in your vault's `.obsidian/plugins/` directory
 3. Copy the three files into that folder
 4. Enable the plugin in Settings → Community plugins
 

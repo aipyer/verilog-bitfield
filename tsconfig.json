@@ -9,14 +9,18 @@
     "allowSyntheticDefaultImports": true,
     "noImplicitAny": true,
     "moduleResolution": "node",
-    "importHelpers": true,
+    "importHelpers": false,
     "isolatedModules": true,
     "strictNullChecks": true,
     "lib": [
       "DOM",
+      "DOM.Iterable",
       "ES2016",
-      "ES2017"
-    ]
+      "ES2017",
+      "ESNext"
+    ],
+    "types": [],
+    "skipLibCheck": false
   },
   "include": [
     "src/**/*.ts"

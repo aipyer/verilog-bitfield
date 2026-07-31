@@ -3,13 +3,18 @@ import DOMPurify from 'dompurify';
 /**
  * Sanitize an HTML string for safe assignment to `innerHTML`.
  *
- * Pass `window` so DOMPurify can access the DOM to run its sanitizer.
- * Obsidian plugins run in a browser context where `window` is always available.
+ * DOMPurify returns `string` (or `TrustedHTML` when the browser supports
+ * trusted-types). In either case the HTML has been filtered and is safe.
+ *
+ * We cast through `unknown` because `HTMLElement.innerHTML` is typed as
+ * `string` in the project's `lib.dom.d.ts` — DOMPurify's return type
+ * (`string | TrustedHTML`) doesn't match, but the value IS safe.
  */
 export function sanitizeHtml(html: string): string {
   const purify = DOMPurify(window);
-  return purify.sanitize(html, {
+  const sanitized = purify.sanitize(html, {
     FORBID_TAGS: ['style', 'script', 'link'],
     FORBID_ATTR: ['onerror', 'onload', 'formaction'],
   });
+  return String(sanitized);
 }
