@@ -86,7 +86,7 @@ export class BitfieldSettingTab extends PluginSettingTab {
     const { containerEl } = this;
     containerEl.empty();
 
-    new Setting(containerEl).setName('Bitfield').setHeading();
+    new Setting(containerEl).setHeading();
 
     // SVG 主题
     new Setting(containerEl)
