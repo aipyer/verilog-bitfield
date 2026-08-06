@@ -24,10 +24,9 @@ interface RenderConfig {
 /**
  * 判断是否应使用纵向布局
  */
-function shouldUseVertical(fields: BitField[], totalWidth: number): boolean {
+function shouldUseVertical(fields: BitField[], totalWidth: number, fontSize: number = 22): boolean {
   const svgWidth = 1000;
   const availableWidth = svgWidth - 120;
-  const fontSize = 22;
 
   for (const field of fields) {
     const fieldName = field.isReserved ? 'reserved' : (field.isReference ? `@${field.refName}` : field.name);
@@ -45,12 +44,12 @@ function shouldUseVertical(fields: BitField[], totalWidth: number): boolean {
 /**
  * 渲染块的 SVG 位域图
  */
-export function renderBlockSvg(block: FieldBlock, theme: SvgTheme = 'pastel', boxHeight: number = 44): string {
+export function renderBlockSvg(block: FieldBlock, theme: SvgTheme = 'pastel', boxHeight: number = 38, fontSize: number = 22): string {
   const config: RenderConfig = {
     totalWidth: block.width,
-    isVertical: shouldUseVertical(block.children, block.width),
+    isVertical: shouldUseVertical(block.children, block.width, fontSize),
     boxHeight,
-    fontSize: 22,
+    fontSize,
     theme,
   };
 
@@ -172,7 +171,7 @@ function renderFieldBox(
 
   const textDecoration = '';
   const fillColor = isRsv ? '#888' : '#333';
-  svg += `<text x="${textX}" y="${textY}" font-size="${fontSize}" text-anchor="middle" dominant-baseline="central" fill="${fillColor}" font-family="monospace"${textDecoration} data-field="${fieldName}"${isRef ? ` data-ref="${field.refName}"` : ''} style="cursor:${isRef ? 'pointer' : 'default'}">${displayText}</text>`;
+  svg += `<text x="${textX}" y="${textY}" font-size="${fontSize}" text-anchor="middle" dy="0.35em" fill="${fillColor}" font-family="monospace"${textDecoration} data-field="${fieldName}"${isRef ? ` data-ref="${field.refName}"` : ''} style="cursor:${isRef ? 'pointer' : 'default'}">${displayText}</text>`;
 
   // 框外：父字段索引 [msb:lsb]，灰色小字
   const parentHigh = field.msb;
@@ -184,7 +183,7 @@ function renderFieldBox(
     // 纵向：标注在右侧，左对齐（左侧空间不足时 3 位数字标注不会被 viewBox 裁剪）
     const annotX = x + width + 8;
     const annotY = textY;
-    svg += `<text x="${annotX}" y="${annotY}" font-size="${annotationFontSize}" text-anchor="start" dominant-baseline="central" fill="#999" font-family="monospace">${parentLabel}</text>`;
+    svg += `<text x="${annotX}" y="${annotY}" font-size="${annotationFontSize}" text-anchor="start" dy="0.35em" fill="#999" font-family="monospace">${parentLabel}</text>`;
   } else {
     // 横向：标注在上方，居中
     const annotX = textX;

@@ -1,11 +1,37 @@
 import type { MarkdownPostProcessorContext } from 'obsidian';
-import { createFragment, Plugin } from 'obsidian';
+import { Plugin, sanitizeHTMLToDom } from 'obsidian';
 import { parse } from './parser';
 import { renderBlockSvg } from './svgRenderer';
 import { renderBlockTable } from './tableRenderer';
 import type { RegistryEntry, FieldBlock } from './types';
 import { BitfieldSettingTab } from './settings';
 import type { SvgTheme } from './colors';
+
+const OLD_PLUGIN_ID = 'verilog-bitfield';
+
+const CSS = {
+  container: 'bf-container',
+  headerRow: 'bf-header-row',
+  header: 'bf-header',
+  content: 'bf-content',
+  svg: 'bf-svg',
+  tableContainer: 'bf-table-container',
+  table: 'bf-table',
+  error: 'bf-error',
+  toggleBtn: 'bf-view-toggle',
+  toggleOption: 'bf-toggle-option',
+  toggleActive: 'bf-toggle-active',
+  tooltip: 'bf-tooltip',
+  tooltipHeader: 'bf-tooltip-header',
+  tooltipSvg: 'bf-tooltip-svg',
+  tooltipTable: 'bf-tooltip-table',
+  tooltipHint: 'bf-tooltip-hint',
+  refLink: 'bf-ref-link',
+  refUnresolved: 'bf-ref-unresolved',
+  highlight: 'bf-highlight',
+  rowRef: 'bf-row-ref',
+  rowReserved: 'bf-row-reserved',
+};
 
 export type TableTheme = 'default' | 'minimal' | 'zebra' | 'clean' | 'dark-header';
 
@@ -14,10 +40,12 @@ export interface PluginData {
   tableTheme?: TableTheme;
   svgTheme?: SvgTheme;
   svgBoxHeight?: number;
+  svgFontSize?: number;
+  tableFontSize?: number;
   tableRowHeight?: number;
 }
 
-export const DEFAULT_DATA: PluginData = { defaultView: 'svg', tableTheme: 'default', svgTheme: 'pastel', svgBoxHeight: 38, tableRowHeight: 28 };
+export const DEFAULT_DATA: PluginData = { defaultView: 'svg', tableTheme: 'default', svgTheme: 'pastel', svgBoxHeight: 38, svgFontSize: 22, tableFontSize: 14, tableRowHeight: 28 };
 
 export default class BitfieldPlugin extends Plugin {
   private blockRegistry: Map<string, RegistryEntry> = new Map();
@@ -26,17 +54,212 @@ export default class BitfieldPlugin extends Plugin {
   private activeTooltip: HTMLElement | null = null;
   private tooltipRemoveTimer: ReturnType<typeof setTimeout> | null = null;
   private pluginData: PluginData = DEFAULT_DATA;
+  private stylesInjected = false;
 
   // public accessor for SettingTab
   get savedData(): PluginData { return this.pluginData; }
   set savedData(v: PluginData) { this.pluginData = v; }
 
+  /** Expose as `settings` so Obsidian's PluginSettingTab.getControlValue() doesn't crash */
+  get settings(): PluginData { return this.pluginData; }
+  set settings(v: PluginData) { this.pluginData = v; }
+
   async onload() {
+    // 迁移旧插件的数据
+    const migrated = await this.migrateData();
     this.pluginData = Object.assign({}, DEFAULT_DATA, (await this.loadData()) as PluginData);
     this.addSettingTab(new BitfieldSettingTab(this.app, this));
     this.registerMarkdownCodeBlockProcessor('bitfield', this.processBitfield.bind(this));
-    // 应用保存的表格行高
+    // 应用保存的表格行高、字体和主题
     document.documentElement.style.setProperty('--bf-table-row-height', `${this.pluginData.tableRowHeight || 28}px`);
+    document.documentElement.style.setProperty('--bf-table-font-size', `${this.pluginData.tableFontSize || 14}px`);
+    this.injectTableStyles();
+    // Apply saved theme to existing blocks (if any re-rendered)
+    this.applyTableTheme(this.pluginData.tableTheme || 'default');
+  }
+
+  /** Apply table theme to all rendered blocks */
+  private applyTableTheme(theme: TableTheme): void {
+    document.querySelectorAll('.bf-table-container').forEach(el => {
+      el.setAttribute('data-theme', theme);
+    });
+  }
+
+  /** 从旧插件名迁移数据到新插件 */
+  private async migrateData(): Promise<boolean> {
+    const pluginData = await this.loadData() as PluginData | null;
+    if (pluginData && Object.keys(pluginData).length > 0) {
+      return false;
+    }
+    const configDir = this.app.vault.configDir;
+    const oldDataFile = `${configDir}/plugins/${OLD_PLUGIN_ID}/data.json`;
+    try {
+      const oldRaw = await this.app.vault.adapter.read(oldDataFile);
+      if (oldRaw) {
+        const oldData = JSON.parse(oldRaw) as PluginData;
+        if (oldData && Object.keys(oldData).length > 0) {
+          await this.saveData(oldData);
+          console.log('[bitfield] Migrated settings from old plugin');
+          return true;
+        }
+      }
+    } catch {
+      // 旧插件目录不存在或读取失败，忽略
+    }
+    return false;
+  }
+
+  private injectTableStyles(): void {
+    if (this.stylesInjected) return;
+    this.stylesInjected = true;
+
+    const css = `
+      /* 表格样式 — 用 .markdown-preview-view 限定作用域，确保优先于 Obsidian 主题样式 */
+      .markdown-preview-view .bf-table-container .bf-table,
+      .markdown-source-view .bf-table-container .bf-table {
+        width: 100%; border-collapse: collapse; table-layout: auto;
+      }
+      .markdown-preview-view .bf-table-container .bf-table th,
+      .markdown-preview-view .bf-table-container .bf-table td,
+      .markdown-source-view .bf-table-container .bf-table th,
+      .markdown-source-view .bf-table-container .bf-table td {
+        border: 1px solid #ddd; padding: 0 8px; text-align: center;
+        line-height: var(--bf-table-row-height, 28px); font-size: var(--bf-table-font-size, 14px);
+        height: var(--bf-table-row-height, 28px);
+      }
+      .markdown-preview-view .bf-table-container .bf-table th:last-child,
+      .markdown-preview-view .bf-table-container .bf-table td:last-child,
+      .markdown-source-view .bf-table-container .bf-table th:last-child,
+      .markdown-source-view .bf-table-container .bf-table td:last-child {
+        text-align: left;
+      }
+      .markdown-preview-view .bf-table-container .bf-table th,
+      .markdown-source-view .bf-table-container .bf-table th {
+        background-color: #f5f5f5; font-weight: 600;
+      }
+      .markdown-preview-view .bf-table-container .bf-table tr:hover,
+      .markdown-source-view .bf-table-container .bf-table tr:hover {
+        background-color: #f9f9f9;
+      }
+      .markdown-preview-view .bf-table-container .bf-table td:first-child,
+      .markdown-source-view .bf-table-container .bf-table td:first-child {
+        font-family: monospace; white-space: nowrap;
+      }
+      /* 行样式 */
+      .bf-table tr.bf-row-ref { background-color: #f0f7ff; }
+      .bf-table tr.bf-row-ref:hover { background-color: #e0efff; }
+      .bf-table tr.bf-row-reserved { background-color: #f5f5f5; }
+      .bf-table tr.bf-row-reserved td { font-style: italic; color: #999; }
+      .bf-table tr.bf-row-reserved:hover { background-color: #efefef; }
+
+      /* ── minimal ── */
+      .markdown-preview-view .bf-table-container[data-theme="minimal"] .bf-table th,
+      .markdown-preview-view .bf-table-container[data-theme="minimal"] .bf-table td,
+      .markdown-source-view .bf-table-container[data-theme="minimal"] .bf-table th,
+      .markdown-source-view .bf-table-container[data-theme="minimal"] .bf-table td {
+        border: none; border-bottom: 1px solid #eee;
+      }
+      .markdown-preview-view .bf-table-container[data-theme="minimal"] .bf-table th,
+      .markdown-source-view .bf-table-container[data-theme="minimal"] .bf-table th { border-bottom: 2px solid #ddd; }
+      .markdown-preview-view .bf-table-container[data-theme="minimal"] .bf-table tr:last-child td,
+      .markdown-source-view .bf-table-container[data-theme="minimal"] .bf-table tr:last-child td { border-bottom: none; }
+      .markdown-preview-view .bf-table-container[data-theme="minimal"] .bf-table tr.bf-row-ref,
+      .markdown-preview-view .bf-table-container[data-theme="minimal"] .bf-table tr.bf-row-ref:hover,
+      .markdown-preview-view .bf-table-container[data-theme="minimal"] .bf-table tr.bf-row-reserved,
+      .markdown-preview-view .bf-table-container[data-theme="minimal"] .bf-table tr.bf-row-reserved:hover,
+      .markdown-source-view .bf-table-container[data-theme="minimal"] .bf-table tr.bf-row-ref,
+      .markdown-source-view .bf-table-container[data-theme="minimal"] .bf-table tr.bf-row-ref:hover,
+      .markdown-source-view .bf-table-container[data-theme="minimal"] .bf-table tr.bf-row-reserved,
+      .markdown-source-view .bf-table-container[data-theme="minimal"] .bf-table tr.bf-row-reserved:hover {
+        background-color: transparent !important;
+      }
+      .markdown-preview-view .bf-table-container[data-theme="minimal"] .bf-table tr.bf-row-ref:hover { background-color: #f0f7ff; }
+      .markdown-preview-view .bf-table-container[data-theme="minimal"] .bf-table tr.bf-row-reserved:hover { background-color: #f9f9f9; }
+
+      /* ── zebra ── */
+      .markdown-preview-view .bf-table-container[data-theme="zebra"] .bf-table th,
+      .markdown-preview-view .bf-table-container[data-theme="zebra"] .bf-table td,
+      .markdown-source-view .bf-table-container[data-theme="zebra"] .bf-table th,
+      .markdown-source-view .bf-table-container[data-theme="zebra"] .bf-table td { border: none; }
+      .markdown-preview-view .bf-table-container[data-theme="zebra"] .bf-table th,
+      .markdown-source-view .bf-table-container[data-theme="zebra"] .bf-table th { border-bottom: 2px solid #ddd; }
+      .markdown-preview-view .bf-table-container[data-theme="zebra"] .bf-table tbody tr:nth-child(even),
+      .markdown-source-view .bf-table-container[data-theme="zebra"] .bf-table tbody tr:nth-child(even) { background-color: #f9f9f9; }
+      .markdown-preview-view .bf-table-container[data-theme="zebra"] .bf-table tbody tr:nth-child(even):hover,
+      .markdown-source-view .bf-table-container[data-theme="zebra"] .bf-table tbody tr:nth-child(even):hover { background-color: #f0f0f0; }
+      .markdown-preview-view .bf-table-container[data-theme="zebra"] .bf-table tr.bf-row-ref { background-color: #f0f7ff !important; }
+      .markdown-preview-view .bf-table-container[data-theme="zebra"] .bf-table tr.bf-row-ref:hover { background-color: #e0efff !important; }
+      .markdown-preview-view .bf-table-container[data-theme="zebra"] .bf-table tr.bf-row-reserved { background-color: #f5f5f5 !important; }
+      .markdown-preview-view .bf-table-container[data-theme="zebra"] .bf-table tr.bf-row-reserved:hover { background-color: #efefef !important; }
+
+      /* ── clean ── */
+      .markdown-preview-view .bf-table-container[data-theme="clean"] .bf-table th,
+      .markdown-preview-view .bf-table-container[data-theme="clean"] .bf-table td,
+      .markdown-source-view .bf-table-container[data-theme="clean"] .bf-table th,
+      .markdown-source-view .bf-table-container[data-theme="clean"] .bf-table td { border: none; }
+      .markdown-preview-view .bf-table-container[data-theme="clean"] .bf-table th,
+      .markdown-source-view .bf-table-container[data-theme="clean"] .bf-table th { border-bottom: 2px solid #333; font-weight: 600; }
+      .markdown-preview-view .bf-table-container[data-theme="clean"] .bf-table tr,
+      .markdown-source-view .bf-table-container[data-theme="clean"] .bf-table tr { border-bottom: 1px solid #eee; }
+      .markdown-preview-view .bf-table-container[data-theme="clean"] .bf-table tr.bf-row-ref,
+      .markdown-preview-view .bf-table-container[data-theme="clean"] .bf-table tr.bf-row-ref:hover,
+      .markdown-preview-view .bf-table-container[data-theme="clean"] .bf-table tr.bf-row-reserved,
+      .markdown-preview-view .bf-table-container[data-theme="clean"] .bf-table tr.bf-row-reserved:hover,
+      .markdown-source-view .bf-table-container[data-theme="clean"] .bf-table tr.bf-row-ref,
+      .markdown-source-view .bf-table-container[data-theme="clean"] .bf-table tr.bf-row-ref:hover,
+      .markdown-source-view .bf-table-container[data-theme="clean"] .bf-table tr.bf-row-reserved,
+      .markdown-source-view .bf-table-container[data-theme="clean"] .bf-table tr.bf-row-reserved:hover {
+        background-color: transparent !important;
+      }
+      .markdown-preview-view .bf-table-container[data-theme="clean"] .bf-table tr.bf-row-ref:hover { background-color: #f0f7ff; }
+      .markdown-preview-view .bf-table-container[data-theme="clean"] .bf-table tr.bf-row-reserved:hover { background-color: #f9f9f9; }
+
+      /* ── dark-header ── */
+      .markdown-preview-view .bf-table-container[data-theme="dark-header"] .bf-table th,
+      .markdown-preview-view .bf-table-container[data-theme="dark-header"] .bf-table td,
+      .markdown-source-view .bf-table-container[data-theme="dark-header"] .bf-table th,
+      .markdown-source-view .bf-table-container[data-theme="dark-header"] .bf-table td { border: none; border-bottom: 1px solid #eee; }
+      .markdown-preview-view .bf-table-container[data-theme="dark-header"] .bf-table th,
+      .markdown-source-view .bf-table-container[data-theme="dark-header"] .bf-table th {
+        background-color: #333; color: #fff; border-bottom: none; font-weight: 600;
+      }
+      .markdown-preview-view .bf-table-container[data-theme="dark-header"] .bf-table tr:last-child td,
+      .markdown-source-view .bf-table-container[data-theme="dark-header"] .bf-table tr:last-child td { border-bottom: none; }
+      .markdown-preview-view .bf-table-container[data-theme="dark-header"] .bf-table tr:hover,
+      .markdown-source-view .bf-table-container[data-theme="dark-header"] .bf-table tr:hover { background-color: #f0f0f0; }
+      .markdown-preview-view .bf-table-container[data-theme="dark-header"] .bf-table tr.bf-row-ref,
+      .markdown-preview-view .bf-table-container[data-theme="dark-header"] .bf-table tr.bf-row-ref:hover,
+      .markdown-preview-view .bf-table-container[data-theme="dark-header"] .bf-table tr.bf-row-reserved,
+      .markdown-preview-view .bf-table-container[data-theme="dark-header"] .bf-table tr.bf-row-reserved:hover,
+      .markdown-source-view .bf-table-container[data-theme="dark-header"] .bf-table tr.bf-row-ref,
+      .markdown-source-view .bf-table-container[data-theme="dark-header"] .bf-table tr.bf-row-ref:hover,
+      .markdown-source-view .bf-table-container[data-theme="dark-header"] .bf-table tr.bf-row-reserved,
+      .markdown-source-view .bf-table-container[data-theme="dark-header"] .bf-table tr.bf-row-reserved:hover {
+        background-color: transparent !important;
+      }
+      .markdown-preview-view .bf-table-container[data-theme="dark-header"] .bf-table tr.bf-row-ref:hover { background-color: #f0f7ff; }
+      .markdown-preview-view .bf-table-container[data-theme="dark-header"] .bf-table tr.bf-row-reserved:hover { background-color: #f0f0f0; }
+
+      /* 参考链接 */
+      .bf-ref-link { color: #4A90D9; text-decoration: none; cursor: pointer; font-family: monospace; }
+      .bf-ref-link:hover { color: #2a6cb8; }
+      .bf-ref-unresolved { color: #999; text-decoration: none; cursor: not-allowed; }
+
+      /* 悬浮 tooltip 中的表格 */
+      .bf-tooltip .bf-table { width: 100%; border-collapse: collapse; }
+      .bf-tooltip .bf-table th,
+      .bf-tooltip .bf-table td {
+        border: 1px solid #ddd; padding: 4px 8px; text-align: center;
+      }
+      .bf-tooltip .bf-table th:last-child,
+      .bf-tooltip .bf-table td:last-child { text-align: left; }
+      .bf-tooltip .bf-table th { background-color: #f5f5f5; font-weight: 600; }
+      .bf-tooltip .bf-table tr.bf-row-reserved td { color: #999; font-style: italic; }
+    `;
+
+    const styleEl = document.createElement('style');
+    styleEl.textContent = css;
+    document.head.appendChild(styleEl);
   }
 
   onunload() {
@@ -64,36 +287,43 @@ export default class BitfieldPlugin extends Plugin {
 
   private renderBlock(name: string, block: FieldBlock, parentEl: HTMLElement) {
     const container = parentEl.createEl('div', {
-      cls: 'bitfield-container',
+      cls: CSS.container,
       attr: { id: `bf:${name}` }
     });
 
-    const headerRow = container.createEl('div', { cls: 'bitfield-header-row' });
+    const headerRow = container.createEl('div', { cls: CSS.headerRow });
+    headerRow.style.display = 'flex';
+    headerRow.style.alignItems = 'center';
+    headerRow.style.justifyContent = 'space-between';
+    headerRow.style.marginBottom = '8px';
     const desc = block.description ? ` — ${block.description}` : '';
     headerRow.createEl('span', {
       text: `${name}${desc} 的 ${block.width} bit 定义如下：`,
-      cls: 'bitfield-header'
+      cls: CSS.header
     });
     const toggleBtn = this.createToggleButton(headerRow);
 
-    const contentWrap = container.createEl('div', { cls: 'bitfield-content' });
-    const svgContainer = contentWrap.createEl('div', { cls: 'bitfield-svg' });
-    createFragment((fragment) => {
-      fragment.setHTML(renderBlockSvg(block, this.pluginData.svgTheme || 'pastel', this.pluginData.svgBoxHeight || 44));
-    }).appendTo(svgContainer);
+    const contentWrap = container.createEl('div', { cls: CSS.content });
+    const svgContainer = contentWrap.createEl('div', { cls: CSS.svg });
+    const svgHtml = renderBlockSvg(block, this.pluginData.svgTheme || 'pastel', this.pluginData.svgBoxHeight || 38, this.pluginData.svgFontSize || 22);
+    const svgDocFrag = sanitizeHTMLToDom(svgHtml);
+    svgContainer.appendChild(svgDocFrag);
     this.setupNavigationHandlers(svgContainer);
     this.setupTooltipHandlers(svgContainer);
 
-    const tableContainer = contentWrap.createEl('div', { cls: 'bitfield-table-container' });
+    const tableContainer = contentWrap.createEl('div', { cls: CSS.tableContainer });
     tableContainer.setAttribute('data-theme', this.pluginData.tableTheme || 'default');
-    createFragment((fragment) => {
-      fragment.setHTML(renderBlockTable(block));
-    }).appendTo(tableContainer);
+    const tableHtml = renderBlockTable(block);
+    const tableDocFrag = sanitizeHTMLToDom(tableHtml);
+    tableContainer.appendChild(tableDocFrag);
     this.setupTableNavigationHandlers(tableContainer);
     this.setupTableTooltipHandlers(tableContainer);
 
     // 初始化视图：读取保存的偏好
     const defaultView = this.pluginData.defaultView || 'svg';
+    // 初始隐藏所有容器，applyView 根据默认视图显示一个
+    svgContainer.style.display = 'none';
+    tableContainer.style.display = 'none';
     this.applyView(defaultView, contentWrap, svgContainer, tableContainer, toggleBtn);
 
     // 绑定切换事件
@@ -107,6 +337,15 @@ export default class BitfieldPlugin extends Plugin {
       }
     };
 
+    // 监听设置变更事件 — 由 Settings Tab dispatch 触发
+    const settingsHandler = () => {
+      this.applyTableTheme(this.pluginData.tableTheme || 'default');
+      document.documentElement.style.setProperty('--bf-table-row-height', `${this.pluginData.tableRowHeight || 28}px`);
+      document.documentElement.style.setProperty('--bf-table-font-size', `${this.pluginData.tableFontSize || 14}px`);
+      this.rerenderAll();
+    };
+    window.addEventListener('bf-settings-changed', settingsHandler);
+
     this.blockRegistry.set(name, {
       element: container,
       block,
@@ -119,35 +358,77 @@ export default class BitfieldPlugin extends Plugin {
 
   private applyView(view: 'svg' | 'table', contentWrap: HTMLElement, svgEl: HTMLElement, tableEl: HTMLElement, btn: HTMLElement) {
     contentWrap.setAttribute('data-view', view);
-    btn.querySelectorAll('.bf-toggle-option').forEach(opt => {
-      opt.classList.toggle('bf-toggle-active', opt.getAttribute('data-view') === view);
+    if (view === 'svg') {
+      svgEl.style.display = 'block';
+      tableEl.style.display = 'none';
+    } else {
+      svgEl.style.display = 'none';
+      tableEl.style.display = 'block';
+    }
+    btn.querySelectorAll(`.${CSS.toggleOption}`).forEach(opt => {
+      opt.classList.toggle(CSS.toggleActive, opt.getAttribute('data-view') === view);
     });
   }
 
   private createToggleButton(parent: HTMLElement): HTMLElement {
-    const btn = parent.createEl('div', { cls: 'bf-view-toggle' });
-    btn.createEl('span', { text: '位域图', cls: 'bf-toggle-option bf-toggle-svg', attr: { 'data-view': 'svg' } });
-    btn.createEl('span', { text: '表格', cls: 'bf-toggle-option bf-toggle-table', attr: { 'data-view': 'table' } });
+    const btn = parent.createEl('div', { cls: CSS.toggleBtn });
+    btn.createEl('span', { text: '位域图', cls: `${CSS.toggleOption} bf-toggle-svg`, attr: { 'data-view': 'svg' } });
+    btn.createEl('span', { text: '表格', cls: `${CSS.toggleOption} bf-toggle-table`, attr: { 'data-view': 'table' } });
     return btn;
   }
 
   /** Rerender all SVGs with current theme — public for SettingTab */
   public rerenderAllSvg(): void {
     const theme = this.pluginData.svgTheme || 'pastel';
+    const boxHeight = this.pluginData.svgBoxHeight || 38;
+    const fontSize = this.pluginData.svgFontSize || 22;
     for (const [, entry] of this.blockRegistry) {
-      const svgContainer = entry.element.querySelector('.bitfield-svg') as HTMLElement | null;
+      const svgContainer = entry.element.querySelector(`.${CSS.svg}`) as HTMLElement | null;
       if (svgContainer) {
-        createFragment((fragment) => {
-          fragment.setHTML(renderBlockSvg(entry.block, theme, this.pluginData.svgBoxHeight || 44));
-        }).appendTo(svgContainer);
+        svgContainer.empty(); // 先清空旧 SVG
+        const svgHtml = renderBlockSvg(entry.block, theme, boxHeight, fontSize);
+        const svgDocFrag = sanitizeHTMLToDom(svgHtml);
+        svgContainer.appendChild(svgDocFrag);
         this.setupNavigationHandlers(svgContainer);
         this.setupTooltipHandlers(svgContainer);
       }
     }
   }
 
+  /** Re-render all blocks with updated settings — public for SettingTab */
+  public rerenderAll(): void {
+    console.log('[bitfield] rerenderAll called, entries:', this.blockRegistry.size);
+    // 重建 DOM 会丢失事件监听器，先关闭 tooltip
+    const wasTooltipVisible = this.activeTooltip !== null;
+    this.removeTooltip();
+    for (const [name, entry] of this.blockRegistry) {
+      console.log('[bitfield] rerenderAll entry:', name);
+      const container = entry.element;
+      const svgContainer = container.querySelector(`.${CSS.svg}`) as HTMLElement | null;
+      if (svgContainer) {
+        const svgHtml = renderBlockSvg(entry.block, this.pluginData.svgTheme || 'pastel', this.pluginData.svgBoxHeight || 38, this.pluginData.svgFontSize || 22);
+        const svgDocFrag = sanitizeHTMLToDom(svgHtml);
+        svgContainer.empty();
+        svgContainer.appendChild(svgDocFrag);
+        this.setupNavigationHandlers(svgContainer);
+        this.setupTooltipHandlers(svgContainer);
+      }
+      const tableContainer = container.querySelector(`.${CSS.tableContainer}`) as HTMLElement | null;
+      if (tableContainer) {
+        tableContainer.setAttribute('data-theme', this.pluginData.tableTheme || 'default');
+        const tableHtml = renderBlockTable(entry.block);
+        const tableDocFrag = sanitizeHTMLToDom(tableHtml);
+        tableContainer.empty();
+        tableContainer.appendChild(tableDocFrag);
+        this.setupTableNavigationHandlers(tableContainer);
+        this.setupTableTooltipHandlers(tableContainer);
+      }
+    }
+    window.setTimeout(() => this.resolvePendingRefs(), 50);
+  }
+
   private renderErrors(el: HTMLElement, errors: { line: number; message: string; suggestion?: string }[]) {
-    el.createEl('div', { cls: 'bitfield-error' }, (errorEl) => {
+    el.createEl('div', { cls: CSS.error }, (errorEl) => {
       errorEl.createEl('p', { text: '解析错误:' });
       for (const error of errors) {
         errorEl.createEl('p', { text: `行 ${error.line}: ${error.message}` });
@@ -172,7 +453,7 @@ export default class BitfieldPlugin extends Plugin {
   private setupTableNavigationHandlers(container: HTMLElement) {
     container.onclick = (e: MouseEvent) => {
       const target = e.target as HTMLElement;
-      if (target.classList.contains('bf-ref-link')) {
+      if (target.classList.contains(CSS.refLink)) {
         e.preventDefault();
         const refName = target.getAttribute('data-target');
         if (refName) this.scrollToBlock(refName);
@@ -184,8 +465,8 @@ export default class BitfieldPlugin extends Plugin {
     const entry = this.blockRegistry.get(blockName);
     if (!entry) return;
     entry.element.scrollIntoView({ behavior: 'smooth', block: 'center' });
-    entry.element.classList.add('bf-highlight');
-    window.setTimeout(() => entry.element.classList.remove('bf-highlight'), 1500);
+    entry.element.classList.add(CSS.highlight);
+    window.setTimeout(() => entry.element.classList.remove(CSS.highlight), 1500);
   }
 
   // ─── 悬浮 tooltip ───
@@ -216,7 +497,7 @@ export default class BitfieldPlugin extends Plugin {
   private setupTableTooltipHandlers(container: HTMLElement) {
     container.addEventListener('mouseover', (e: MouseEvent) => {
       const target = e.target as HTMLElement;
-      if (target.classList.contains('bf-ref-link')) {
+      if (target.classList.contains(CSS.refLink)) {
         if (this.tooltipRemoveTimer) {
           window.clearTimeout(this.tooltipRemoveTimer);
           this.tooltipRemoveTimer = null;
@@ -230,7 +511,7 @@ export default class BitfieldPlugin extends Plugin {
     });
     container.addEventListener('mouseout', (e: MouseEvent) => {
       const target = e.target as HTMLElement;
-      if (target.classList.contains('bf-ref-link')) this.scheduleTooltipRemove();
+      if (target.classList.contains(CSS.refLink)) this.scheduleTooltipRemove();
     });
   }
 
@@ -238,7 +519,7 @@ export default class BitfieldPlugin extends Plugin {
   private getViewForBlock(blockName: string): 'svg' | 'table' {
     const entry = this.blockRegistry.get(blockName);
     if (entry) {
-      const contentWrap = entry.element.querySelector('.bitfield-content');
+      const contentWrap = entry.element.querySelector(`.${CSS.content}`);
       const view = contentWrap?.getAttribute('data-view') as 'svg' | 'table' | undefined;
       if (view) return view;
     }
@@ -257,24 +538,25 @@ export default class BitfieldPlugin extends Plugin {
 
     this.removeTooltip();
 
-    const tooltip = document.body.createEl('div', { cls: 'bf-tooltip' });
+    const tooltip = document.body.createEl('div', { cls: CSS.tooltip });
+    tooltip.style.fontSize = `${this.pluginData.tableFontSize || 14}px`;
 
     const desc = entry.block.description ? ` — ${entry.block.description}` : '';
-    tooltip.createEl('p', { text: `${blockName}${desc}`, cls: 'bf-tooltip-header' });
+    tooltip.createEl('p', { text: `${blockName}${desc}`, cls: CSS.tooltipHeader });
 
     if (view === 'svg') {
-      const svgWrap = tooltip.createEl('div', { cls: 'bf-tooltip-svg' });
-      createFragment((fragment) => {
-        fragment.setHTML(renderBlockSvg(entry.block, this.pluginData.svgTheme || 'pastel', this.pluginData.svgBoxHeight || 44));
-      }).appendTo(svgWrap);
+      const svgWrap = tooltip.createEl('div', { cls: CSS.tooltipSvg });
+      const svgHtml = renderBlockSvg(entry.block, this.pluginData.svgTheme || 'pastel', this.pluginData.svgBoxHeight || 38, this.pluginData.svgFontSize || 22);
+      const svgDocFrag = sanitizeHTMLToDom(svgHtml);
+      svgWrap.appendChild(svgDocFrag);
     } else {
-      const tableWrap = tooltip.createEl('div', { cls: 'bf-tooltip-table' });
-      createFragment((fragment) => {
-        fragment.setHTML(renderBlockTable(entry.block));
-      }).appendTo(tableWrap);
+      const tableWrap = tooltip.createEl('div', { cls: CSS.tooltipTable });
+      const tableHtml = renderBlockTable(entry.block);
+      const tableDocFrag = sanitizeHTMLToDom(tableHtml);
+      tableWrap.appendChild(tableDocFrag);
     }
 
-    tooltip.createEl('p', { text: '单击跳转查看完整定义', cls: 'bf-tooltip-hint' });
+    tooltip.createEl('p', { text: '单击跳转查看完整定义', cls: CSS.tooltipHint });
 
     document.body.appendChild(tooltip);
     this.activeTooltip = tooltip;
@@ -295,7 +577,13 @@ export default class BitfieldPlugin extends Plugin {
         this.tooltipRemoveTimer = null;
       }
     });
-    tooltip.addEventListener('mouseleave', () => this.removeTooltip());
+    tooltip.addEventListener('mouseleave', () => {
+      // 鼠标离开 tooltip 本身时延迟关闭，避免 tooltip 内元素（表格/SVG）
+      // 上的 mouseout 立刻触发关闭 — 用户移到 tooltip 内部的表格里不会关闭
+      this.tooltipRemoveTimer = window.setTimeout(() => {
+        this.removeTooltip();
+      }, 200);
+    });
   }
 
   private removeTooltip() {
@@ -315,12 +603,12 @@ export default class BitfieldPlugin extends Plugin {
         this.pendingRefs.push({ element: el as HTMLElement, targetName: refName });
       }
     });
-    container.querySelectorAll('.bf-ref-link').forEach((el) => {
+    container.querySelectorAll(`.${CSS.refLink}`).forEach((el) => {
       const targetName = el.getAttribute('data-target') ?? '';
       if (!targetName) return;
       if (!this.blockRegistry.has(targetName)) {
         this.pendingRefs.push({ element: el as HTMLElement, targetName });
-        (el as HTMLElement).classList.add('bf-ref-unresolved');
+        (el as HTMLElement).classList.add(CSS.refUnresolved);
       }
     });
   }
@@ -329,7 +617,7 @@ export default class BitfieldPlugin extends Plugin {
     const stillPending: typeof this.pendingRefs = [];
     for (const pending of this.pendingRefs) {
       if (this.blockRegistry.has(pending.targetName)) {
-        pending.element.classList.remove('bf-ref-unresolved');
+        pending.element.classList.remove(CSS.refUnresolved);
       } else {
         stillPending.push(pending);
       }

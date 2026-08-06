@@ -1,5 +1,10 @@
 import type { BitField, FieldBlock } from './types';
 
+const TABLE_CLASS = 'bf-table';
+const ROW_RESERVED = 'bf-row-reserved';
+const ROW_REF = 'bf-row-ref';
+const REF_LINK = 'bf-ref-link';
+
 /**
  * 渲染块的 HTML 表格
  */
@@ -10,7 +15,7 @@ export function renderBlockTable(block: FieldBlock): string {
     collectRows(child, 0, rows);
   }
 
-  let html = '<table class="bitfield-table">';
+  let html = `<table class="${TABLE_CLASS}">`;
   html += '<thead><tr>';
   html += '<th>Field</th>';
   html += '<th>Width</th>';
@@ -35,11 +40,11 @@ function collectRows(field: BitField, depth: number, rows: string[]): void {
   const description = field.description || '';
 
   let rowClass = '';
-  if (isRsv) rowClass = ' class="reserved-row"';
-  else if (isRef) rowClass = ' class="ref-child"';
+  if (isRsv) rowClass = ` class="${ROW_RESERVED}"`;
+  else if (isRef) rowClass = ` class="${ROW_REF}"`;
 
   const nameCell = isRef
-    ? `<a href="#" class="bf-ref-link" data-target="${field.refName}">${indent}${name}</a>`
+    ? `<a href="#" class="${REF_LINK}" data-target="${field.refName}">${indent}${name}</a>`
     : `${indent}${name}`;
 
   rows.push(`<tr${rowClass}>`);

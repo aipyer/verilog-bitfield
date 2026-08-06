@@ -1,7 +1,8 @@
-import type { App, SettingDefinitionItem } from 'obsidian';
+import type { App } from 'obsidian';
 import { PluginSettingTab, Setting } from 'obsidian';
 import type BitfieldPlugin from './main';
 import type { TableTheme, PluginData as PluginDataTypes } from './main';
+import { DEFAULT_DATA } from './main';
 import type { SvgTheme } from './colors';
 
 const TABLE_THEME_LABELS: Record<TableTheme, string> = {
@@ -26,62 +27,6 @@ export class BitfieldSettingTab extends PluginSettingTab {
     this.plugin = plugin;
   }
 
-  get data(): PluginDataTypes { return this.plugin.savedData; }
-  set data(v: PluginDataTypes) { this.plugin.savedData = v; }
-
-  /** Declarative settings definitions for Obsidian 1.13.0+ search */
-  getSettingDefinitions(): SettingDefinitionItem[] {
-    return [{
-      type: 'group',
-      items: [
-        {
-          name: 'SVG theme',
-          desc: 'Color scheme for bitfield diagrams',
-          control: {
-            key: 'svgTheme',
-            type: 'dropdown',
-            defaultValue: 'pastel',
-            options: SVG_THEME_LABELS,
-          },
-        },
-        {
-          name: 'SVG row height',
-          desc: 'Height of each field row in bitfield diagrams (px)',
-          control: {
-            key: 'svgBoxHeight',
-            type: 'slider',
-            defaultValue: 38,
-            min: 28,
-            max: 80,
-            step: 2,
-          },
-        },
-        {
-          name: 'Table theme',
-          desc: 'Visual style for rendered tables',
-          control: {
-            key: 'tableTheme',
-            type: 'dropdown',
-            defaultValue: 'default',
-            options: TABLE_THEME_LABELS,
-          },
-        },
-        {
-          name: 'Table row height',
-          desc: 'Row height for rendered tables (px)',
-          control: {
-            key: 'tableRowHeight',
-            type: 'slider',
-            defaultValue: 28,
-            min: 18,
-            max: 48,
-            step: 2,
-          },
-        },
-      ],
-    }];
-  }
-
   display(): void {
     const { containerEl } = this;
     containerEl.empty();
@@ -96,11 +41,12 @@ export class BitfieldSettingTab extends PluginSettingTab {
         for (const [key, label] of Object.entries(SVG_THEME_LABELS)) {
           drop.addOption(key, label);
         }
-        drop.setValue(this.data.svgTheme || 'pastel');
+        drop.setValue(this.plugin.pluginData.svgTheme || 'pastel');
         drop.onChange(async (value) => {
-          this.data.svgTheme = value as SvgTheme;
-          await this.plugin.saveData(this.data);
-          this.plugin.rerenderAllSvg();
+          console.log('[bitfield settings] dropdown changed svgTheme:', value);
+          this.plugin.pluginData.svgTheme = value as SvgTheme;
+          await this.plugin.saveData(this.plugin.pluginData);
+          window.dispatchEvent(new CustomEvent('bf-settings-changed'));
         });
       });
 
@@ -110,11 +56,27 @@ export class BitfieldSettingTab extends PluginSettingTab {
       .setDesc('Height of each field row in bitfield diagrams (px)')
       .addSlider(slider => {
         slider.setLimits(28, 80, 2);
-        slider.setValue(this.data.svgBoxHeight || 38);
+        slider.setValue(this.plugin.pluginData.svgBoxHeight || 38);
         slider.onChange(async (value) => {
-          this.data.svgBoxHeight = value;
-          await this.plugin.saveData(this.data);
-          this.plugin.rerenderAllSvg();
+          console.log('[bitfield settings] slider changed svgBoxHeight:', value);
+          this.plugin.pluginData.svgBoxHeight = value;
+          await this.plugin.saveData(this.plugin.pluginData);
+          window.dispatchEvent(new CustomEvent('bf-settings-changed'));
+        });
+      });
+
+    // SVG 字体大小
+    new Setting(containerEl)
+      .setName('SVG font size')
+      .setDesc('Font size for field labels in bitfield diagrams (px)')
+      .addSlider(slider => {
+        slider.setLimits(14, 36, 1);
+        slider.setValue(this.plugin.pluginData.svgFontSize || 22);
+        slider.onChange(async (value) => {
+          console.log('[bitfield settings] slider changed svgFontSize:', value);
+          this.plugin.pluginData.svgFontSize = value;
+          await this.plugin.saveData(this.plugin.pluginData);
+          window.dispatchEvent(new CustomEvent('bf-settings-changed'));
         });
       });
 
@@ -126,11 +88,14 @@ export class BitfieldSettingTab extends PluginSettingTab {
         for (const [key, label] of Object.entries(TABLE_THEME_LABELS)) {
           drop.addOption(key, label);
         }
-        drop.setValue(this.data.tableTheme || 'default');
+        drop.setValue(this.plugin.pluginData.tableTheme || 'default');
         drop.onChange(async (value) => {
-          this.data.tableTheme = value as TableTheme;
-          await this.plugin.saveData(this.data);
-          this.applyTableTheme(value as TableTheme);
+          console.log('[bitfield settings] dropdown changed tableTheme:', value);
+          this.plugin.pluginData.tableTheme = value as TableTheme;
+          await this.plugin.saveData(this.plugin.pluginData);
+          console.log('[bitfield settings] saveData completed');
+          // 触发全局事件，让插件重绘所有块
+          window.dispatchEvent(new CustomEvent('bf-settings-changed'));
         });
       });
 
@@ -140,22 +105,28 @@ export class BitfieldSettingTab extends PluginSettingTab {
       .setDesc('Row height for rendered tables (px)')
       .addSlider(slider => {
         slider.setLimits(18, 48, 2);
-        slider.setValue(this.data.tableRowHeight || 28);
+        slider.setValue(this.plugin.pluginData.tableRowHeight || 28);
         slider.onChange(async (value) => {
-          this.data.tableRowHeight = value;
-          await this.plugin.saveData(this.data);
-          this.applyTableRowHeight(value);
+          console.log('[bitfield settings] slider changed tableRowHeight:', value);
+          this.plugin.pluginData.tableRowHeight = value;
+          await this.plugin.saveData(this.plugin.pluginData);
+          window.dispatchEvent(new CustomEvent('bf-settings-changed'));
         });
       });
-  }
 
-  private applyTableTheme(theme: TableTheme): void {
-    document.querySelectorAll('.bitfield-table-container').forEach(el => {
-      el.setAttribute('data-theme', theme);
-    });
-  }
-
-  private applyTableRowHeight(height: number): void {
-    document.documentElement.style.setProperty('--bf-table-row-height', `${height}px`);
+    // 表格字体大小
+    new Setting(containerEl)
+      .setName('Table font size')
+      .setDesc('Font size for rendered tables (px)')
+      .addSlider(slider => {
+        slider.setLimits(10, 24, 1);
+        slider.setValue(this.plugin.pluginData.tableFontSize || 14);
+        slider.onChange(async (value) => {
+          console.log('[bitfield settings] slider changed tableFontSize:', value);
+          this.plugin.pluginData.tableFontSize = value;
+          await this.plugin.saveData(this.plugin.pluginData);
+          window.dispatchEvent(new CustomEvent('bf-settings-changed'));
+        });
+      });
   }
 }
