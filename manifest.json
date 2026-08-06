@@ -6,8 +6,5 @@
   "description": "Render bitfield definitions as interactive SVG diagrams and tables.",
   "author": "aipyer",
   "authorUrl": "https://github.com/aipyer",
-  "isDesktopOnly": false,
-  "css": [
-    "styles.css"
-  ]
+  "isDesktopOnly": false
 }
