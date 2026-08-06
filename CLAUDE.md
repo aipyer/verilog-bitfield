@@ -20,6 +20,10 @@
 
 Tag 不带 `v` 前缀，格式为纯语义版本号（如 `1.1.1`）。
 
+## CHANGELOG Rule
+
+CHANGELOG 更新必须附带版本号和日期，格式 `## [x.y.z] - YYYY-MM-DD`，不写改动细节。
+
 ## 注意
 
 CLAUDE.md 不硬编码项目 identity（author name/email），以运行时检查为准。
