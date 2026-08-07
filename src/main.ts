@@ -169,8 +169,8 @@ export default class BitfieldPlugin extends Plugin {
 
     // 初始化视图：读取保存的偏好
     const defaultView = this.pluginData.defaultView || 'svg';
-    svgContainer.style.display = 'none';
-    tableContainer.style.display = 'none';
+    svgContainer.setCssStyles({ display: 'none' });
+    tableContainer.setCssStyles({ display: 'none' });
     this.applyView(defaultView, contentWrap, svgContainer, tableContainer, toggleBtn);
 
     // 绑定切换事件
