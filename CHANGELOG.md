@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.1.6] - 2026-08-07
+
+### Fixed
+- 移除 `createElement('style')` 动态注入 CSS 的代码，全部样式走 `styles.css`，修复 Obsidian 报 "Creating and attaching 'style' elements is not allowed" 错误
+- 所有 `element.style.xxx = yyy` 替换为 `setCssStyles()`，修复 `obsidianmd/no-static-styles-assignment` 报错
+- `styles.css` 统一 class 名前缀为 `bf-*`，匹配代码中的 CSS 常量
+
 ## [Unreleased]
 
 ### Added

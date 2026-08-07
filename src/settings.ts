@@ -1,8 +1,7 @@
 import type { App } from 'obsidian';
 import { PluginSettingTab, Setting } from 'obsidian';
 import type BitfieldPlugin from './main';
-import type { TableTheme, PluginData as PluginDataTypes } from './main';
-import { DEFAULT_DATA } from './main';
+import type { TableTheme } from './main';
 import type { SvgTheme } from './colors';
 
 const TABLE_THEME_LABELS: Record<TableTheme, string> = {

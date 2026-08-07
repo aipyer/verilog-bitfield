@@ -1,19 +1,19 @@
 /* Bitfield 插件样式 */
 
-.bitfield-container {
+.bf-container {
   margin: 16px 0;
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
 }
 
 /* 标题行：文字 + 切换按钮 */
-.bitfield-header-row {
+.bf-header-row {
   display: flex;
   align-items: center;
   justify-content: space-between;
   margin-bottom: 8px;
 }
 
-.bitfield-header {
+.bf-header {
   margin: 0;
   color: #555;
   font-weight: 500;
@@ -54,203 +54,205 @@
   color: #fff;
 }
 
-/* 视图切换 */
-.bitfield-content[data-view="svg"] .bitfield-svg { display: block; }
-.bitfield-content[data-view="svg"] .bitfield-table-container { display: none; }
-.bitfield-content[data-view="table"] .bitfield-svg { display: none; }
-.bitfield-content[data-view="table"] .bitfield-table-container { display: block; }
+/* 视图切换 — 初始隐藏所有容器，按 data-view 显示 */
+.bf-content .bf-svg,
+.bf-content .bf-table-container {
+  display: none;
+}
+.bf-content[data-view="svg"] .bf-svg { display: block; }
+.bf-content[data-view="table"] .bf-table-container { display: block; }
 
 /* SVG 位域图 */
-.bitfield-svg {
+.bf-svg {
   overflow-x: auto;
 }
 
-.bitfield-svg svg {
+.bf-svg svg {
   max-width: 100%;
   height: auto;
 }
 
-.bitfield-svg svg rect {
+.bf-svg svg rect {
   transition: opacity 0.2s;
 }
 
-.bitfield-svg svg rect:hover {
+.bf-svg svg rect:hover {
   opacity: 0.8;
 }
 
-.bitfield-svg svg text {
+.bf-svg svg text {
   pointer-events: auto;
   user-select: none;
 }
 
 /* 表格 */
-.bitfield-table-container {
+.bf-table-container {
   overflow-x: auto;
 }
 
-.bitfield-table {
+.bf-table {
   width: 100%;
   border-collapse: collapse;
   table-layout: auto;
 }
 
-.bitfield-table th,
-.bitfield-table td {
+.bf-table th,
+.bf-table td {
   border: 1px solid #ddd;
   padding: 0 8px;
   text-align: center;
-  line-height: var(--bf-table-row-height, 28px) !important;
-  font-size: var(--bf-table-font-size, 14px) !important;
-  height: var(--bf-table-row-height, 28px) !important;
+  line-height: var(--bf-table-row-height, 28px);
+  font-size: var(--bf-table-font-size, 14px);
+  height: var(--bf-table-row-height, 28px);
 }
 
-.bitfield-table th:last-child,
-.bitfield-table td:last-child {
+.bf-table th:last-child,
+.bf-table td:last-child {
   text-align: left;
 }
 
-.bitfield-table th {
+.bf-table th {
   background-color: #f5f5f5;
   font-weight: 600;
 }
 
-.bitfield-table tr:hover {
+.bf-table tr:hover {
   background-color: #f9f9f9;
 }
 
-.bitfield-table td:first-child {
+.bf-table td:first-child {
   font-family: monospace;
   white-space: nowrap;
 }
 
 /* @引用行 */
-.bitfield-table tr.ref-child {
+.bf-table tr.bf-row-ref {
   background-color: #f0f7ff;
 }
 
-.bitfield-table tr.ref-child:hover {
+.bf-table tr.bf-row-ref:hover {
   background-color: #e0efff;
 }
 
 /* reserved 行 */
-.bitfield-table tr.reserved-row {
+.bf-table tr.bf-row-reserved {
   background-color: #f5f5f5;
 }
 
-.bitfield-table tr.reserved-row td {
+.bf-table tr.bf-row-reserved td {
   font-style: italic;
   color: #999;
 }
 
-.bitfield-table tr.reserved-row:hover {
+.bf-table tr.bf-row-reserved:hover {
   background-color: #efefef;
 }
 
 /* ── minimal 主题：去竖线，只保留横线 ── */
-[data-theme="minimal"] .bitfield-table th,
-[data-theme="minimal"] .bitfield-table td {
+[data-theme="minimal"] .bf-table th,
+[data-theme="minimal"] .bf-table td {
   border: none !important;
   border-bottom: 1px solid #eee !important;
 }
-[data-theme="minimal"] .bitfield-table th {
+[data-theme="minimal"] .bf-table th {
   border-bottom: 2px solid #ddd !important;
 }
-[data-theme="minimal"] .bitfield-table tr:last-child td {
+[data-theme="minimal"] .bf-table tr:last-child td {
   border-bottom: none !important;
 }
-[data-theme="minimal"] .bitfield-table tr.ref-child {
+[data-theme="minimal"] .bf-table tr.bf-row-ref {
   background-color: transparent !important;
 }
-[data-theme="minimal"] .bitfield-table tr.ref-child:hover {
+[data-theme="minimal"] .bf-table tr.bf-row-ref:hover {
   background-color: #f0f7ff !important;
 }
-[data-theme="minimal"] .bitfield-table tr.reserved-row {
+[data-theme="minimal"] .bf-table tr.bf-row-reserved {
   background-color: transparent !important;
 }
-[data-theme="minimal"] .bitfield-table tr.reserved-row:hover {
+[data-theme="minimal"] .bf-table tr.bf-row-reserved:hover {
   background-color: #f9f9f9 !important;
 }
 
 /* ── zebra 主题：奇偶行交替底色，无网格线 ── */
-[data-theme="zebra"] .bitfield-table th,
-[data-theme="zebra"] .bitfield-table td {
+[data-theme="zebra"] .bf-table th,
+[data-theme="zebra"] .bf-table td {
   border: none !important;
 }
-[data-theme="zebra"] .bitfield-table th {
+[data-theme="zebra"] .bf-table th {
   border-bottom: 2px solid #ddd !important;
 }
-[data-theme="zebra"] .bitfield-table tbody tr:nth-child(even) {
+[data-theme="zebra"] .bf-table tbody tr:nth-child(even) {
   background-color: #f9f9f9 !important;
 }
-[data-theme="zebra"] .bitfield-table tbody tr:nth-child(even):hover {
+[data-theme="zebra"] .bf-table tbody tr:nth-child(even):hover {
   background-color: #f0f0f0 !important;
 }
-[data-theme="zebra"] .bitfield-table tr.ref-child {
+[data-theme="zebra"] .bf-table tr.bf-row-ref {
   background-color: #f0f7ff !important;
 }
-[data-theme="zebra"] .bitfield-table tr.ref-child:hover {
+[data-theme="zebra"] .bf-table tr.bf-row-ref:hover {
   background-color: #e0efff !important;
 }
-[data-theme="zebra"] .bitfield-table tr.reserved-row {
+[data-theme="zebra"] .bf-table tr.bf-row-reserved {
   background-color: #f5f5f5 !important;
 }
-[data-theme="zebra"] .bitfield-table tr.reserved-row:hover {
+[data-theme="zebra"] .bf-table tr.bf-row-reserved:hover {
   background-color: #efefef !important;
 }
 
 /* ── clean 主题：无边框，纯留白分隔 ── */
-[data-theme="clean"] .bitfield-table th,
-[data-theme="clean"] .bitfield-table td {
+[data-theme="clean"] .bf-table th,
+[data-theme="clean"] .bf-table td {
   border: none !important;
 }
-[data-theme="clean"] .bitfield-table th {
+[data-theme="clean"] .bf-table th {
   border-bottom: 2px solid #333 !important;
   font-weight: 600;
 }
-[data-theme="clean"] .bitfield-table tr {
+[data-theme="clean"] .bf-table tr {
   border-bottom: 1px solid #eee !important;
 }
-[data-theme="clean"] .bitfield-table tr.ref-child {
+[data-theme="clean"] .bf-table tr.bf-row-ref {
   background-color: transparent !important;
 }
-[data-theme="clean"] .bitfield-table tr.ref-child:hover {
+[data-theme="clean"] .bf-table tr.bf-row-ref:hover {
   background-color: #f0f7ff !important;
 }
-[data-theme="clean"] .bitfield-table tr.reserved-row {
+[data-theme="clean"] .bf-table tr.bf-row-reserved {
   background-color: transparent !important;
 }
-[data-theme="clean"] .bitfield-table tr.reserved-row:hover {
+[data-theme="clean"] .bf-table tr.bf-row-reserved:hover {
   background-color: #f9f9f9 !important;
 }
 
 /* ── dark-header 主题：深色表头白字，表体无交替色 ── */
-[data-theme="dark-header"] .bitfield-table th,
-[data-theme="dark-header"] .bitfield-table td {
+[data-theme="dark-header"] .bf-table th,
+[data-theme="dark-header"] .bf-table td {
   border: none !important;
   border-bottom: 1px solid #eee !important;
 }
-[data-theme="dark-header"] .bitfield-table th {
+[data-theme="dark-header"] .bf-table th {
   background-color: #333 !important;
   color: #fff !important;
   border-bottom: none !important;
   font-weight: 600;
 }
-[data-theme="dark-header"] .bitfield-table tr:last-child td {
+[data-theme="dark-header"] .bf-table tr:last-child td {
   border-bottom: none !important;
 }
-[data-theme="dark-header"] .bitfield-table tr:hover {
+[data-theme="dark-header"] .bf-table tr:hover {
   background-color: #f0f0f0 !important;
 }
-[data-theme="dark-header"] .bitfield-table tr.ref-child {
+[data-theme="dark-header"] .bf-table tr.bf-row-ref {
   background-color: transparent !important;
 }
-[data-theme="dark-header"] .bitfield-table tr.ref-child:hover {
+[data-theme="dark-header"] .bf-table tr.bf-row-ref:hover {
   background-color: #f0f7ff !important;
 }
-[data-theme="dark-header"] .bitfield-table tr.reserved-row {
+[data-theme="dark-header"] .bf-table tr.bf-row-reserved {
   background-color: transparent !important;
 }
-[data-theme="dark-header"] .bitfield-table tr.reserved-row:hover {
+[data-theme="dark-header"] .bf-table tr.bf-row-reserved:hover {
   background-color: #f0f0f0 !important;
 }
 
@@ -346,7 +348,7 @@
   font-weight: 600;
 }
 
-.bf-tooltip-table tr.reserved-row td {
+.bf-tooltip-table tr.bf-row-reserved td {
   color: #999;
   font-style: italic;
 }
@@ -359,7 +361,7 @@
 }
 
 /* 错误信息 */
-.bitfield-error {
+.bf-error {
   padding: 16px;
   background-color: #ffebee;
   border: 1px solid #ffcdd2;
@@ -367,12 +369,11 @@
   color: #c62828;
 }
 
-.bitfield-error p {
+.bf-error p {
   margin: 4px 0;
 }
 
-.bitfield-error .suggestion {
+.bf-error .suggestion {
   color: #666;
   font-style: italic;
 }
-

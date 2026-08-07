@@ -54,7 +54,7 @@ export default class BitfieldPlugin extends Plugin {
   private activeTooltip: HTMLElement | null = null;
   private tooltipRemoveTimer: ReturnType<typeof setTimeout> | null = null;
   private pluginData: PluginData = DEFAULT_DATA;
-  private stylesInjected = false;
+  private stylesInjected = false; // suppress unused-var lint
 
   // public accessor for SettingTab
   get savedData(): PluginData { return this.pluginData; }
@@ -73,7 +73,6 @@ export default class BitfieldPlugin extends Plugin {
     // 应用保存的表格行高、字体和主题
     document.documentElement.style.setProperty('--bf-table-row-height', `${this.pluginData.tableRowHeight || 28}px`);
     document.documentElement.style.setProperty('--bf-table-font-size', `${this.pluginData.tableFontSize || 14}px`);
-    this.injectTableStyles();
     // Apply saved theme to existing blocks (if any re-rendered)
     this.applyTableTheme(this.pluginData.tableTheme || 'default');
   }
@@ -109,159 +108,6 @@ export default class BitfieldPlugin extends Plugin {
     return false;
   }
 
-  private injectTableStyles(): void {
-    if (this.stylesInjected) return;
-    this.stylesInjected = true;
-
-    const css = `
-      /* 表格样式 — 用 .markdown-preview-view 限定作用域，确保优先于 Obsidian 主题样式 */
-      .markdown-preview-view .bf-table-container .bf-table,
-      .markdown-source-view .bf-table-container .bf-table {
-        width: 100%; border-collapse: collapse; table-layout: auto;
-      }
-      .markdown-preview-view .bf-table-container .bf-table th,
-      .markdown-preview-view .bf-table-container .bf-table td,
-      .markdown-source-view .bf-table-container .bf-table th,
-      .markdown-source-view .bf-table-container .bf-table td {
-        border: 1px solid #ddd; padding: 0 8px; text-align: center;
-        line-height: var(--bf-table-row-height, 28px); font-size: var(--bf-table-font-size, 14px);
-        height: var(--bf-table-row-height, 28px);
-      }
-      .markdown-preview-view .bf-table-container .bf-table th:last-child,
-      .markdown-preview-view .bf-table-container .bf-table td:last-child,
-      .markdown-source-view .bf-table-container .bf-table th:last-child,
-      .markdown-source-view .bf-table-container .bf-table td:last-child {
-        text-align: left;
-      }
-      .markdown-preview-view .bf-table-container .bf-table th,
-      .markdown-source-view .bf-table-container .bf-table th {
-        background-color: #f5f5f5; font-weight: 600;
-      }
-      .markdown-preview-view .bf-table-container .bf-table tr:hover,
-      .markdown-source-view .bf-table-container .bf-table tr:hover {
-        background-color: #f9f9f9;
-      }
-      .markdown-preview-view .bf-table-container .bf-table td:first-child,
-      .markdown-source-view .bf-table-container .bf-table td:first-child {
-        font-family: monospace; white-space: nowrap;
-      }
-      /* 行样式 */
-      .bf-table tr.bf-row-ref { background-color: #f0f7ff; }
-      .bf-table tr.bf-row-ref:hover { background-color: #e0efff; }
-      .bf-table tr.bf-row-reserved { background-color: #f5f5f5; }
-      .bf-table tr.bf-row-reserved td { font-style: italic; color: #999; }
-      .bf-table tr.bf-row-reserved:hover { background-color: #efefef; }
-
-      /* ── minimal ── */
-      .markdown-preview-view .bf-table-container[data-theme="minimal"] .bf-table th,
-      .markdown-preview-view .bf-table-container[data-theme="minimal"] .bf-table td,
-      .markdown-source-view .bf-table-container[data-theme="minimal"] .bf-table th,
-      .markdown-source-view .bf-table-container[data-theme="minimal"] .bf-table td {
-        border: none; border-bottom: 1px solid #eee;
-      }
-      .markdown-preview-view .bf-table-container[data-theme="minimal"] .bf-table th,
-      .markdown-source-view .bf-table-container[data-theme="minimal"] .bf-table th { border-bottom: 2px solid #ddd; }
-      .markdown-preview-view .bf-table-container[data-theme="minimal"] .bf-table tr:last-child td,
-      .markdown-source-view .bf-table-container[data-theme="minimal"] .bf-table tr:last-child td { border-bottom: none; }
-      .markdown-preview-view .bf-table-container[data-theme="minimal"] .bf-table tr.bf-row-ref,
-      .markdown-preview-view .bf-table-container[data-theme="minimal"] .bf-table tr.bf-row-ref:hover,
-      .markdown-preview-view .bf-table-container[data-theme="minimal"] .bf-table tr.bf-row-reserved,
-      .markdown-preview-view .bf-table-container[data-theme="minimal"] .bf-table tr.bf-row-reserved:hover,
-      .markdown-source-view .bf-table-container[data-theme="minimal"] .bf-table tr.bf-row-ref,
-      .markdown-source-view .bf-table-container[data-theme="minimal"] .bf-table tr.bf-row-ref:hover,
-      .markdown-source-view .bf-table-container[data-theme="minimal"] .bf-table tr.bf-row-reserved,
-      .markdown-source-view .bf-table-container[data-theme="minimal"] .bf-table tr.bf-row-reserved:hover {
-        background-color: transparent !important;
-      }
-      .markdown-preview-view .bf-table-container[data-theme="minimal"] .bf-table tr.bf-row-ref:hover { background-color: #f0f7ff; }
-      .markdown-preview-view .bf-table-container[data-theme="minimal"] .bf-table tr.bf-row-reserved:hover { background-color: #f9f9f9; }
-
-      /* ── zebra ── */
-      .markdown-preview-view .bf-table-container[data-theme="zebra"] .bf-table th,
-      .markdown-preview-view .bf-table-container[data-theme="zebra"] .bf-table td,
-      .markdown-source-view .bf-table-container[data-theme="zebra"] .bf-table th,
-      .markdown-source-view .bf-table-container[data-theme="zebra"] .bf-table td { border: none; }
-      .markdown-preview-view .bf-table-container[data-theme="zebra"] .bf-table th,
-      .markdown-source-view .bf-table-container[data-theme="zebra"] .bf-table th { border-bottom: 2px solid #ddd; }
-      .markdown-preview-view .bf-table-container[data-theme="zebra"] .bf-table tbody tr:nth-child(even),
-      .markdown-source-view .bf-table-container[data-theme="zebra"] .bf-table tbody tr:nth-child(even) { background-color: #f9f9f9; }
-      .markdown-preview-view .bf-table-container[data-theme="zebra"] .bf-table tbody tr:nth-child(even):hover,
-      .markdown-source-view .bf-table-container[data-theme="zebra"] .bf-table tbody tr:nth-child(even):hover { background-color: #f0f0f0; }
-      .markdown-preview-view .bf-table-container[data-theme="zebra"] .bf-table tr.bf-row-ref { background-color: #f0f7ff !important; }
-      .markdown-preview-view .bf-table-container[data-theme="zebra"] .bf-table tr.bf-row-ref:hover { background-color: #e0efff !important; }
-      .markdown-preview-view .bf-table-container[data-theme="zebra"] .bf-table tr.bf-row-reserved { background-color: #f5f5f5 !important; }
-      .markdown-preview-view .bf-table-container[data-theme="zebra"] .bf-table tr.bf-row-reserved:hover { background-color: #efefef !important; }
-
-      /* ── clean ── */
-      .markdown-preview-view .bf-table-container[data-theme="clean"] .bf-table th,
-      .markdown-preview-view .bf-table-container[data-theme="clean"] .bf-table td,
-      .markdown-source-view .bf-table-container[data-theme="clean"] .bf-table th,
-      .markdown-source-view .bf-table-container[data-theme="clean"] .bf-table td { border: none; }
-      .markdown-preview-view .bf-table-container[data-theme="clean"] .bf-table th,
-      .markdown-source-view .bf-table-container[data-theme="clean"] .bf-table th { border-bottom: 2px solid #333; font-weight: 600; }
-      .markdown-preview-view .bf-table-container[data-theme="clean"] .bf-table tr,
-      .markdown-source-view .bf-table-container[data-theme="clean"] .bf-table tr { border-bottom: 1px solid #eee; }
-      .markdown-preview-view .bf-table-container[data-theme="clean"] .bf-table tr.bf-row-ref,
-      .markdown-preview-view .bf-table-container[data-theme="clean"] .bf-table tr.bf-row-ref:hover,
-      .markdown-preview-view .bf-table-container[data-theme="clean"] .bf-table tr.bf-row-reserved,
-      .markdown-preview-view .bf-table-container[data-theme="clean"] .bf-table tr.bf-row-reserved:hover,
-      .markdown-source-view .bf-table-container[data-theme="clean"] .bf-table tr.bf-row-ref,
-      .markdown-source-view .bf-table-container[data-theme="clean"] .bf-table tr.bf-row-ref:hover,
-      .markdown-source-view .bf-table-container[data-theme="clean"] .bf-table tr.bf-row-reserved,
-      .markdown-source-view .bf-table-container[data-theme="clean"] .bf-table tr.bf-row-reserved:hover {
-        background-color: transparent !important;
-      }
-      .markdown-preview-view .bf-table-container[data-theme="clean"] .bf-table tr.bf-row-ref:hover { background-color: #f0f7ff; }
-      .markdown-preview-view .bf-table-container[data-theme="clean"] .bf-table tr.bf-row-reserved:hover { background-color: #f9f9f9; }
-
-      /* ── dark-header ── */
-      .markdown-preview-view .bf-table-container[data-theme="dark-header"] .bf-table th,
-      .markdown-preview-view .bf-table-container[data-theme="dark-header"] .bf-table td,
-      .markdown-source-view .bf-table-container[data-theme="dark-header"] .bf-table th,
-      .markdown-source-view .bf-table-container[data-theme="dark-header"] .bf-table td { border: none; border-bottom: 1px solid #eee; }
-      .markdown-preview-view .bf-table-container[data-theme="dark-header"] .bf-table th,
-      .markdown-source-view .bf-table-container[data-theme="dark-header"] .bf-table th {
-        background-color: #333; color: #fff; border-bottom: none; font-weight: 600;
-      }
-      .markdown-preview-view .bf-table-container[data-theme="dark-header"] .bf-table tr:last-child td,
-      .markdown-source-view .bf-table-container[data-theme="dark-header"] .bf-table tr:last-child td { border-bottom: none; }
-      .markdown-preview-view .bf-table-container[data-theme="dark-header"] .bf-table tr:hover,
-      .markdown-source-view .bf-table-container[data-theme="dark-header"] .bf-table tr:hover { background-color: #f0f0f0; }
-      .markdown-preview-view .bf-table-container[data-theme="dark-header"] .bf-table tr.bf-row-ref,
-      .markdown-preview-view .bf-table-container[data-theme="dark-header"] .bf-table tr.bf-row-ref:hover,
-      .markdown-preview-view .bf-table-container[data-theme="dark-header"] .bf-table tr.bf-row-reserved,
-      .markdown-preview-view .bf-table-container[data-theme="dark-header"] .bf-table tr.bf-row-reserved:hover,
-      .markdown-source-view .bf-table-container[data-theme="dark-header"] .bf-table tr.bf-row-ref,
-      .markdown-source-view .bf-table-container[data-theme="dark-header"] .bf-table tr.bf-row-ref:hover,
-      .markdown-source-view .bf-table-container[data-theme="dark-header"] .bf-table tr.bf-row-reserved,
-      .markdown-source-view .bf-table-container[data-theme="dark-header"] .bf-table tr.bf-row-reserved:hover {
-        background-color: transparent !important;
-      }
-      .markdown-preview-view .bf-table-container[data-theme="dark-header"] .bf-table tr.bf-row-ref:hover { background-color: #f0f7ff; }
-      .markdown-preview-view .bf-table-container[data-theme="dark-header"] .bf-table tr.bf-row-reserved:hover { background-color: #f0f0f0; }
-
-      /* 参考链接 */
-      .bf-ref-link { color: #4A90D9; text-decoration: none; cursor: pointer; font-family: monospace; }
-      .bf-ref-link:hover { color: #2a6cb8; }
-      .bf-ref-unresolved { color: #999; text-decoration: none; cursor: not-allowed; }
-
-      /* 悬浮 tooltip 中的表格 */
-      .bf-tooltip .bf-table { width: 100%; border-collapse: collapse; }
-      .bf-tooltip .bf-table th,
-      .bf-tooltip .bf-table td {
-        border: 1px solid #ddd; padding: 4px 8px; text-align: center;
-      }
-      .bf-tooltip .bf-table th:last-child,
-      .bf-tooltip .bf-table td:last-child { text-align: left; }
-      .bf-tooltip .bf-table th { background-color: #f5f5f5; font-weight: 600; }
-      .bf-tooltip .bf-table tr.bf-row-reserved td { color: #999; font-style: italic; }
-    `;
-
-    const styleEl = document.createElement('style');
-    styleEl.textContent = css;
-    document.head.appendChild(styleEl);
-  }
-
   onunload() {
     this.blockRegistry.clear();
     this.pendingRefs = [];
@@ -292,10 +138,12 @@ export default class BitfieldPlugin extends Plugin {
     });
 
     const headerRow = container.createEl('div', { cls: CSS.headerRow });
-    headerRow.style.display = 'flex';
-    headerRow.style.alignItems = 'center';
-    headerRow.style.justifyContent = 'space-between';
-    headerRow.style.marginBottom = '8px';
+    headerRow.setCssStyles({
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      marginBottom: '8px'
+    });
     const desc = block.description ? ` — ${block.description}` : '';
     headerRow.createEl('span', {
       text: `${name}${desc} 的 ${block.width} bit 定义如下：`,
@@ -321,7 +169,6 @@ export default class BitfieldPlugin extends Plugin {
 
     // 初始化视图：读取保存的偏好
     const defaultView = this.pluginData.defaultView || 'svg';
-    // 初始隐藏所有容器，applyView 根据默认视图显示一个
     svgContainer.style.display = 'none';
     tableContainer.style.display = 'none';
     this.applyView(defaultView, contentWrap, svgContainer, tableContainer, toggleBtn);
@@ -359,11 +206,11 @@ export default class BitfieldPlugin extends Plugin {
   private applyView(view: 'svg' | 'table', contentWrap: HTMLElement, svgEl: HTMLElement, tableEl: HTMLElement, btn: HTMLElement) {
     contentWrap.setAttribute('data-view', view);
     if (view === 'svg') {
-      svgEl.style.display = 'block';
-      tableEl.style.display = 'none';
+      svgEl.setCssStyles({ display: 'block' });
+      tableEl.setCssStyles({ display: 'none' });
     } else {
-      svgEl.style.display = 'none';
-      tableEl.style.display = 'block';
+      svgEl.setCssStyles({ display: 'none' });
+      tableEl.setCssStyles({ display: 'block' });
     }
     btn.querySelectorAll(`.${CSS.toggleOption}`).forEach(opt => {
       opt.classList.toggle(CSS.toggleActive, opt.getAttribute('data-view') === view);
@@ -539,7 +386,7 @@ export default class BitfieldPlugin extends Plugin {
     this.removeTooltip();
 
     const tooltip = document.body.createEl('div', { cls: CSS.tooltip });
-    tooltip.style.fontSize = `${this.pluginData.tableFontSize || 14}px`;
+    tooltip.setCssStyles({ fontSize: `${this.pluginData.tableFontSize || 14}px` });
 
     const desc = entry.block.description ? ` — ${entry.block.description}` : '';
     tooltip.createEl('p', { text: `${blockName}${desc}`, cls: CSS.tooltipHeader });
@@ -568,8 +415,7 @@ export default class BitfieldPlugin extends Plugin {
     if (top + rect.height > window.innerHeight - 16) top = window.innerHeight - rect.height - 16;
     if (top < 8) top = 8;
 
-    tooltip.style.left = `${left}px`;
-    tooltip.style.top = `${top}px`;
+    tooltip.setCssStyles({ left: `${left}px`, top: `${top}px` });
     // 鼠标进入 tooltip 时取消待删除定时器
     tooltip.addEventListener('mouseenter', () => {
       if (this.tooltipRemoveTimer) {
