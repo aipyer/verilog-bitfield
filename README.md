@@ -1,91 +1,91 @@
 # Bitfield
 
-An Obsidian plugin that renders bitfield definitions as interactive SVG diagrams and tables. Designed for chip frontend engineers to visualize bitfield layouts directly in their notes.
+一个 Obsidian 插件，将位域定义渲染为交互式 SVG 位域图和 HTML 表格。专为芯片前端工程师设计，方便直接在笔记中查看位域布局。
 
-## Features
+## 功能
 
-- **Unified syntax** — define bitfields with `name width description` and indented children
-- **SVG bitfield diagram** — auto layout (horizontal/vertical) with dual-index labels: self-relative inside box, parent bit range outside as gray annotation
-- **HTML table view** — toggle between diagram and table with one click
-- **Configurable themes** — 3 SVG color schemes (pastel/vivid/mono) and 5 table styles (default/minimal/zebra/clean/dark-header)
-- **Adjustable row height** — SVG and table row height independently configurable via slider
-- **Cross-block references** — use `@block_name` to reference definitions across code blocks
-- **Click to navigate** — click a `@reference` to scroll to the definition and highlight it
-- **Hover preview** — hover over a `@reference` to see a tooltip preview of the definition
-- **Auto-fill reserved** — unfilled bits are automatically padded with `reserved` at the MSB end
-- **LSB-first allocation** — fields defined earlier get lower bits, matching common bitfield convention
-- **Up to 5 levels of nesting**
+- **统一语法** — 使用 `name width description` 和缩进子字段定义位域
+- **SVG 位域图** — 自动布局（横向/纵向），双索引标签：框内显示自身相对索引，框外以灰色标注父级位范围
+- **HTML 表格视图** — 一键切换位域图与表格
+- **可配置主题** — 3 种 SVG 配色方案（pastel/vivid/mono）和 5 种表格风格（default/minimal/zebra/clean/dark-header）
+- **可调行高** — SVG 和表格行高可分别通过滑块调节
+- **跨块引用** — 使用 `@block_name` 在代码块之间引用其他定义
+- **点击跳转** — 点击 `@引用` 可滚动到定义处并高亮显示
+- **悬浮预览** — 鼠标悬停在 `@引用` 上可查看定义的 tooltip 预览
+- **自动填充 reserved** — 未填完的位自动在 MSB 端填充 `reserved`
+- **LSB 优先分配** — 先定义的字段获得低位的位，符合常见位域惯例
+- **最多 5 层嵌套**
 
-## Usage
+## 使用方法
 
-Wrap your bitfield definitions in a `bitfield` code block:
+将位域定义包裹在 `bitfield` 代码块中：
 
 ````markdown
 ```bitfield
-uart_ctrl 32 UART Control Register
-    tx_en 1 Transmit enable
-    rx_en 1 Receive enable
+uart_ctrl 32 UART 控制寄存器
+    tx_en 1 发送使能
+    rx_en 1 接收使能
     reserved 2
-    data_bits 2 Data bits select
-    stop_bits 1 Stop bits select
-    parity_en 1 Parity enable
+    data_bits 2 数据位选择
+    stop_bits 1 停止位选择
+    parity_en 1 校验使能
 ```
 ````
 
-The plugin renders it as an interactive bitfield diagram with dual-index labels:
+插件会将其渲染为交互式位域图，带有双索引标签：
 
-![Vertical bitfield diagram](images/vertical.svg)
+![纵向位域图](images/vertical.svg)
 
-Switch to table view with one click. Wider fields with shorter labels render horizontally:
+一键切换为表格视图。字段较宽、标签较短时渲染为横向：
 
-![Horizontal bitfield diagram](images/horizontal.svg)
+![横向位域图](images/horizontal.svg)
 
-The table view shows field name, bit width, bit range, and description with nested indentation:
+表格视图展示字段名、位宽、位范围及嵌套缩进的描述：
 
-![Table view](images/table.svg)
+![表格视图](images/table.svg)
 
-### Cross-block references
+### 跨块引用
 
-Define blocks in one code block and reference them in another:
+在一个代码块中定义块，在另一个代码块中引用：
 
 ````markdown
 ```bitfield
-uart_ctrl 32 UART Control Register
-    tx_en 1 Transmit enable
-    rx_en 1 Receive enable
+uart_ctrl 32 UART 控制寄存器
+    tx_en 1 发送使能
+    rx_en 1 接收使能
     reserved 2
-    data_bits 2 Data bits select
+    data_bits 2 数据位选择
 
-uart_status 32 UART Status Register
-    tx_busy 1 Transmit busy
-    rx_ready 1 Receive ready
+uart_status 32 UART 状态寄存器
+    tx_busy 1 发送忙
+    rx_ready 1 接收就绪
 ```
 ````
 
 ````markdown
 ```bitfield
-uart_regs 64 UART Register Block
-    @uart_ctrl 32 Control
-    @uart_status 32 Status
+uart_regs 64 UART 寄存器块
+    @uart_ctrl 32 控制
+    @uart_status 32 状态
 ```
 ````
 
-Click `@uart_ctrl` in the referencing block to jump to its definition.
+在引用块中点击 `@uart_ctrl` 即可跳转到其定义处。
 
-## Installation
+## 安装
 
-### From Obsidian Community Plugins
+### 从 Obsidian 社区插件
 
-1. Open Settings → Community plugins
-2. Search for "Bitfield"
-3. Install and enable
+1. 打开设置 → 社区插件
+2. 搜索 "Bitfield"
+3. 安装并启用
 
-### Manual
+### 手动安装
 
-1. Download `main.js`, `manifest.json`, `styles.css` from the [latest release](https://github.com/aipyer/bitfield/releases/latest)
-2. Create a folder `bitfield` in your vault's `.obsidian/plugins/` directory
-3. Copy the three files into that folder
-4. Enable the plugin in Settings → Community plugins
+1. 从 [最新 release](https://github.com/aipyer/bitfield/releases/latest) 下载 `main.js`、`manifest.json`、`styles.css`
+2. 在 vault 的 `.obsidian/plugins/` 目录下创建 `bitfield` 文件夹
+3. 将三个文件复制到该文件夹
+4. 在设置 → 社区插件中启用该插件
 
 ## License
 
